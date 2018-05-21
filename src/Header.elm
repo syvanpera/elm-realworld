@@ -1,4 +1,4 @@
-module Header exposing (render)
+module Header exposing (view)
 
 import Html exposing (..)
 import Html.Attributes exposing (class, href)
@@ -22,8 +22,8 @@ navigation isLoggedIn =
         ]
 
 
-render : String -> Bool -> Html msg
-render appName isLoggedIn =
+view : String -> Bool -> Html msg
+view appName isLoggedIn =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
             [ a [ class "navbar-brand" ]

@@ -5,7 +5,7 @@ import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (decode, required, optional)
 import RemoteData
 import Msgs exposing (Msg)
-import Models exposing (Articles, Article, Author, Tags)
+import Models exposing (Articles, Article, ArticleSlug, Author, Tags)
 
 
 baseApiUrl : String
@@ -23,11 +23,23 @@ fetchTagsUrl =
     baseApiUrl ++ "tags"
 
 
+fetchArticleUrl : String -> String
+fetchArticleUrl slug =
+    baseApiUrl ++ "articles/" ++ slug
+
+
 fetchArticles : Cmd Msg
 fetchArticles =
     Http.get fetchArticlesUrl articlesDecoder
         |> RemoteData.sendRequest
         |> Cmd.map Msgs.OnFetchArticles
+
+
+fetchArticle : ArticleSlug -> Cmd Msg
+fetchArticle slug =
+    Http.get (fetchArticleUrl slug) articleDecoder
+        |> RemoteData.sendRequest
+        |> Cmd.map Msgs.OnFetchArticle
 
 
 fetchTags : Cmd Msg
@@ -53,6 +65,7 @@ articleDecoder : Decode.Decoder Article
 articleDecoder =
     decode Article
         |> required "title" Decode.string
+        |> required "slug" Decode.string
         |> required "description" Decode.string
         |> required "createdAt" Decode.string
         |> required "tagList" (Decode.list Decode.string)

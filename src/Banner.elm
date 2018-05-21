@@ -1,11 +1,11 @@
-module Banner exposing (render)
+module Banner exposing (view)
 
 import Html exposing (Html, div, text, h1, p)
 import Html.Attributes exposing (class)
 
 
-render : String -> Html msg
-render appName =
+view : String -> Html msg
+view appName =
     div
         [ class "banner" ]
         [ div [ class "container" ]

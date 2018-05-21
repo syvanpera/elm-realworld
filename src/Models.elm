@@ -1,22 +1,26 @@
-module Models exposing (initialModel, Model, Articles, Article, Author, Tags)
+module Models exposing (..)
 
 import RemoteData exposing (WebData)
-
-
-initialModel : Model
-initialModel =
-    { appName = "Conduit"
-    , isLoggedIn = False
-    , articles = RemoteData.Loading
-    , tags = RemoteData.Loading
-    }
 
 
 type alias Model =
     { appName : String
     , isLoggedIn : Bool
+    , article : WebData Article
     , articles : WebData Articles
     , tags : WebData Tags
+    , route : Route
+    }
+
+
+initialModel : Route -> Model
+initialModel route =
+    { appName = "Conduit"
+    , isLoggedIn = False
+    , article = RemoteData.NotAsked
+    , articles = RemoteData.Loading
+    , tags = RemoteData.Loading
+    , route = route
     }
 
 
@@ -30,8 +34,13 @@ type alias Articles =
     }
 
 
+type alias ArticleSlug =
+    String
+
+
 type alias Article =
     { title : String
+    , slug : ArticleSlug
     , description : String
     , createdAt : String
     , tagList : List String
@@ -46,3 +55,9 @@ type alias Author =
     , image : String
     , following : Bool
     }
+
+
+type Route
+    = HomeRoute
+    | ArticleRoute ArticleSlug
+    | NotFoundRoute

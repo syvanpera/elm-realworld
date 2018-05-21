@@ -1,11 +1,11 @@
-module Footer exposing (render)
+module Footer exposing (view)
 
 import Html exposing (..)
 import Html.Attributes exposing (class, href)
 
 
-render : String -> Html msg
-render appName =
+view : String -> Html msg
+view appName =
     footer []
         [ div [ class "container" ]
             [ a [ href "/", class "logo-font" ] [ text (String.toLower appName) ]

@@ -1,4 +1,4 @@
-module Home exposing (render)
+module Home exposing (view)
 
 import Html exposing (..)
 import Date
@@ -40,11 +40,11 @@ articlePreview article =
             , div [ class "pull-xs-right" ]
                 [ button [ class "btn btn-sm btn-outline-primary" ]
                     [ i [ class "ion-heart" ] []
-                    , text (toString article.favoritesCount)
+                    , text (" " ++ toString article.favoritesCount)
                     ]
                 ]
             ]
-        , a [ class "preview-link" ]
+        , a [ class "preview-link", href ("/#/articles/" ++ article.slug) ]
             [ h1 [] [ text article.title ]
             , p [] [ text article.description ]
             , span [] [ text "Read more..." ]
@@ -93,8 +93,8 @@ maybeTagList tagsData =
             [ text "" ]
 
 
-render : WebData Tags -> WebData Articles -> Html msg
-render tags articles =
+view : WebData Tags -> WebData Articles -> Html msg
+view tags articles =
     div [ class "container page" ]
         [ div [ class "row" ]
             [ div [ class "col-md-9" ]
