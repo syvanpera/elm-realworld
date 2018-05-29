@@ -1,15 +1,22 @@
-module Routing exposing (..)
+module Routing exposing (Route(..), parseLocation)
 
 import Navigation exposing (Location)
-import Models exposing (ArticleSlug, Route(..))
 import UrlParser exposing (..)
+
+
+type Route
+    = Home
+    | Login
+    | Register
+    | NotFound
 
 
 matchers : Parser (Route -> a) a
 matchers =
     oneOf
-        [ map HomeRoute top
-        , map ArticleRoute (s "articles" </> string)
+        [ map Home top
+        , map Login (s "login")
+        , map Register (s "register")
         ]
 
 
@@ -20,4 +27,4 @@ parseLocation location =
             route
 
         Nothing ->
-            NotFoundRoute
+            NotFound

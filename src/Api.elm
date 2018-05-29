@@ -1,11 +1,10 @@
-module Commands exposing (fetchArticles, fetchTags)
+module Api exposing (fetchArticles, fetchTags)
 
 import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (decode, required, optional)
-import RemoteData
-import Msgs exposing (Msg)
-import Models exposing (Articles, Article, ArticleSlug, Author, Tags)
+import RemoteData exposing (WebData)
+import Model exposing (Articles, Article, ArticleSlug, Author, Tags)
 
 
 baseApiUrl : String
@@ -28,25 +27,22 @@ fetchArticleUrl slug =
     baseApiUrl ++ "articles/" ++ slug
 
 
-fetchArticles : Cmd Msg
+fetchArticles : Cmd (WebData Articles)
 fetchArticles =
     Http.get fetchArticlesUrl articlesDecoder
         |> RemoteData.sendRequest
-        |> Cmd.map Msgs.OnFetchArticles
 
 
-fetchArticle : ArticleSlug -> Cmd Msg
+fetchArticle : ArticleSlug -> Cmd (WebData Article)
 fetchArticle slug =
     Http.get (fetchArticleUrl slug) articleDecoder
         |> RemoteData.sendRequest
-        |> Cmd.map Msgs.OnFetchArticle
 
 
-fetchTags : Cmd Msg
+fetchTags : Cmd (WebData Tags)
 fetchTags =
     Http.get fetchTagsUrl tagsDecoder
         |> RemoteData.sendRequest
-        |> Cmd.map Msgs.OnFetchTags
 
 
 articlesDecoder : Decode.Decoder Articles

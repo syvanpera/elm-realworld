@@ -1,17 +1,56 @@
-module Main exposing (..)
+module Main exposing (main)
 
-import Html exposing (Html, div, p, text, a)
-import Html.Attributes exposing (class, href)
+import Html exposing (Html, div, text)
 import Navigation exposing (Location)
-import Routing exposing (parseLocation)
+import Model exposing (Session)
+import Routing exposing (Route(..), parseLocation)
 import Header
 import Footer
-import Banner
-import Home
-import Article
-import Models exposing (initialModel, Model)
-import Msgs exposing (Msg)
-import Commands exposing (fetchArticles, fetchTags)
+import Page.Home as Home
+import Page.Login as Login
+import Page.Register as Register
+import Debug
+
+
+type alias Model =
+    { appName : String
+    , route : Route
+    , session : Maybe Session
+    , page : Page
+    , homeModel : Home.Model
+    , loginModel : Login.Model
+    , registerModel : Register.Model
+    }
+
+
+type Msg
+    = NoOp
+    | SetRoute Location
+    | HomeMsg Home.Msg
+    | LoginMsg Login.Msg
+    | RegisterMsg Register.Msg
+
+
+type Page
+    = Home
+    | Login
+    | Register
+
+
+
+-- | Register
+
+
+initialModel : Route -> Model
+initialModel route =
+    { appName = "Conduit"
+    , route = route
+    , session = Nothing
+    , page = Home
+    , homeModel = Home.initialModel
+    , loginModel = Login.initialModel
+    , registerModel = Register.initialModel
+    }
 
 
 init : Location -> ( Model, Cmd Msg )
@@ -20,64 +59,92 @@ init location =
         currentRoute =
             parseLocation location
     in
-        ( initialModel currentRoute
-        , Cmd.batch
-            [ fetchArticles
-            , fetchTags
-            ]
-        )
+        ( initialModel currentRoute, Cmd.none )
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ Header.view model.appName model.isLoggedIn
-        , div [ class "home-page" ]
-            [ Banner.view model.appName
-            , page model
-            ]
+        [ Header.view model.appName model.session
+        , viewPage model
         , Footer.view model.appName
         ]
 
 
-page : Model -> Html Msg
-page model =
-    case model.route of
-        Models.HomeRoute ->
-            Home.view model.tags model.articles
+viewPage : Model -> Html Msg
+viewPage model =
+    case model.page of
+        Home ->
+            Html.map HomeMsg (Home.view model.homeModel)
 
-        Models.ArticleRoute slug ->
-            Article.view
+        Login ->
+            Html.map LoginMsg (Login.view model.loginModel)
 
-        Models.NotFoundRoute ->
-            Home.view model.tags model.articles
+        Register ->
+            Html.map RegisterMsg (Register.view model.registerModel)
+
+
+setRoute : Location -> Model -> ( Model, Cmd Msg )
+setRoute location model =
+    let
+        route =
+            parseLocation location
+    in
+        case route of
+            Routing.Home ->
+                -- let
+                --     pageCmd =
+                --         Home.init
+                -- in
+                --     ( { model | route = route, page = Home }, Cmd.map HomeMsg pageCmd )
+                ( { model | route = route, page = Home }, Cmd.none )
+
+            Routing.Login ->
+                ( { model | route = route, page = Login }, Cmd.none )
+
+            Routing.Register ->
+                ( { model | route = route, page = Register }, Cmd.none )
+
+            Routing.NotFound ->
+                ( { model | route = route, page = Home }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Msgs.OnFetchArticles response ->
-            ( { model | articles = response }, Cmd.none )
+        NoOp ->
+            ( model, Cmd.none )
 
-        Msgs.OnFetchArticle response ->
-            ( { model | article = response }, Cmd.none )
+        SetRoute location ->
+            setRoute location model
 
-        Msgs.OnFetchTags response ->
-            ( { model | tags = response }, Cmd.none )
-
-        Msgs.OnLocationChange location ->
+        HomeMsg subMsg ->
             let
-                newRoute =
-                    parseLocation location
+                ( pageModel, pageCmd ) =
+                    Home.update subMsg model.homeModel
             in
-                ( { model | route = newRoute }, Cmd.none )
+                ( { model | homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
+
+        LoginMsg subMsg ->
+            let
+                ( pageModel, pageCmd ) =
+                    Login.update subMsg model.loginModel
+            in
+                ( { model | loginModel = pageModel }, Cmd.map LoginMsg pageCmd )
+
+        RegisterMsg subMsg ->
+            let
+                ( pageModel, pageCmd ) =
+                    Register.update subMsg model.registerModel
+            in
+                ( { model | registerModel = pageModel }, Cmd.map RegisterMsg pageCmd )
 
 
 main : Program Never Model Msg
 main =
-    Navigation.program Msgs.OnLocationChange
+    Navigation.program SetRoute
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = always Sub.none
         }

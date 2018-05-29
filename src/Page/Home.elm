@@ -1,10 +1,32 @@
-module Home exposing (view)
+module Page.Home exposing (Model, Msg, initialModel, view, update)
 
-import Html exposing (..)
-import Date
-import Html.Attributes exposing (class, href, src)
+import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
+import Html.Attributes exposing (class, href, src, hidden)
+import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Models exposing (Articles, Article, Tags)
+import Date
+import Model exposing (Articles, Article, Tags)
+import Api exposing (fetchArticles, fetchTags)
+import Banner
+import Debug
+
+
+type alias Model =
+    { articles : WebData Articles
+    , tags : WebData Tags
+    }
+
+
+type Msg
+    = NoOp
+    | FetchArticles
+    | OnFetchArticles (WebData Articles)
+    | OnFetchTags (WebData Tags)
+
+
+initialModel : Model
+initialModel =
+    Model RemoteData.NotAsked RemoteData.NotAsked
 
 
 formatDate : String -> String
@@ -57,8 +79,8 @@ articlePreview article =
         ]
 
 
-maybeArticleList : WebData Articles -> Html msg
-maybeArticleList articles =
+articleList : WebData Articles -> Html msg
+articleList articles =
     case articles of
         RemoteData.NotAsked ->
             text ""
@@ -77,8 +99,8 @@ maybeArticleList articles =
             text (toString error)
 
 
-maybeTagList : WebData Tags -> List (Html msg)
-maybeTagList tagsData =
+tagList : WebData Tags -> List (Html msg)
+tagList tagsData =
     case tagsData of
         RemoteData.NotAsked ->
             [ text "" ]
@@ -93,27 +115,58 @@ maybeTagList tagsData =
             [ text "" ]
 
 
-view : WebData Tags -> WebData Articles -> Html msg
-view tags articles =
-    div [ class "container page" ]
-        [ div [ class "row" ]
-            [ div [ class "col-md-9" ]
-                [ div [ class "feed-toggle" ]
-                    [ ul [ class "nav nav-pills outline-active" ]
-                        [ li [ class "nav-item" ]
-                            [ a [ href "", class "nav-link active" ]
-                                [ text "Global Feed" ]
+view : Model -> Html Msg
+view model =
+    div [ class "home-page" ]
+        [ Banner.view "Conduit"
+        , div [] [ text (toString model) ]
+        , div [] [ button [ onClick FetchArticles ] [ text "Fetch articles" ] ]
+        , div
+            [ class "container page" ]
+            [ div [ class "row" ]
+                [ div [ class "col-md-9" ]
+                    [ div [ class "feed-toggle" ]
+                        [ ul [ class "nav nav-pills outline-active" ]
+                            [ li [ class "nav-item" ]
+                                [ a [ href "", class "nav-link active" ]
+                                    [ text "Global Feed" ]
+                                ]
                             ]
                         ]
+                    , articleList model.articles
                     ]
-                , maybeArticleList articles
-                ]
-            , div [ class "col-md-3" ]
-                [ div [ class "sidebar" ]
-                    [ p [] [ text "Popular Tags" ]
-                    , div [ class "tag-list" ]
-                        (maybeTagList tags)
+                , div [ class "col-md-3" ]
+                    [ div [ class "sidebar" ]
+                        [ p [ hidden (model.tags == RemoteData.Loading) ] [ text "Popular Tags" ]
+                        , div [ class "tag-list" ]
+                            (tagList model.tags)
+                        ]
                     ]
                 ]
             ]
         ]
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        FetchArticles ->
+            let
+                _ =
+                    Debug.log "Fetch articles" model
+            in
+                ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
+                , Cmd.batch
+                    [ fetchArticles |> Cmd.map OnFetchArticles
+                    , fetchTags |> Cmd.map OnFetchTags
+                    ]
+                )
+
+        OnFetchArticles response ->
+            ( { model | articles = response }, Cmd.none )
+
+        OnFetchTags response ->
+            ( { model | tags = response }, Cmd.none )
