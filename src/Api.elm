@@ -5,7 +5,7 @@ import Json.Decode as Decode exposing (at)
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Slug, Author, Tags)
+import Model exposing (Articles, Article, Slug, Author, Tags, Tag)
 
 
 baseApiUrl : String
@@ -13,9 +13,18 @@ baseApiUrl =
     "https://conduit.productionready.io/api/"
 
 
-fetchArticlesUrl : String
-fetchArticlesUrl =
-    baseApiUrl ++ "articles?limit=10"
+fetchArticlesUrl : Int -> Maybe Tag -> String
+fetchArticlesUrl offset tag =
+    let
+        tagParam =
+            case tag of
+                Just value ->
+                    "&tag=" ++ value
+
+                Nothing ->
+                    ""
+    in
+        baseApiUrl ++ "articles?limit=10&offset=" ++ (toString offset) ++ tagParam
 
 
 fetchTagsUrl : String
@@ -28,9 +37,9 @@ fetchArticleUrl slug =
     baseApiUrl ++ "articles/" ++ slug
 
 
-fetchArticles : Cmd (WebData Articles)
-fetchArticles =
-    Http.get fetchArticlesUrl articlesDecoder
+fetchArticles : Int -> Maybe Tag -> Cmd (WebData Articles)
+fetchArticles offset tag =
+    Http.get (fetchArticlesUrl offset tag) articlesDecoder
         |> RemoteData.sendRequest
 
 

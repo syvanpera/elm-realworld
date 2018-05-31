@@ -133,7 +133,6 @@ view model =
         (case model.article of
             RemoteData.Success article ->
                 [ Banner.view (Just article)
-                , div [] [ text (toString model) ]
                 , viewArticle article
                 ]
 

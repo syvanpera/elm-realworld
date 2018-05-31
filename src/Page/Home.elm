@@ -4,35 +4,38 @@ import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
 import Html.Attributes exposing (class, href, src, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Tags)
+import Model exposing (Articles, Article, Tags, Tag)
 import Api exposing (fetchArticles, fetchTags)
 import Util exposing (formatDate)
 import Banner
+import Debug
 
 
 type alias Model =
     { articles : WebData Articles
     , tags : WebData Tags
+    , tagFilter : Maybe Tag
     }
 
 
 type Msg
     = NoOp
     | FetchArticles
+    | FilterWithTag (Maybe Tag)
     | OnFetchArticles (WebData Articles)
     | OnFetchTags (WebData Tags)
 
 
 initialModel : Model
 initialModel =
-    Model RemoteData.NotAsked RemoteData.NotAsked
+    Model RemoteData.NotAsked RemoteData.NotAsked Nothing
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles |> Cmd.map OnFetchArticles
+        [ fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
         , fetchTags |> Cmd.map OnFetchTags
         ]
     )
@@ -97,7 +100,7 @@ articleList articles =
             text (toString error)
 
 
-tagList : WebData Tags -> List (Html msg)
+tagList : WebData Tags -> List (Html Msg)
 tagList tagsData =
     case tagsData of
         RemoteData.NotAsked ->
@@ -107,7 +110,7 @@ tagList tagsData =
             [ text "Loading tags..." ]
 
         RemoteData.Success tags ->
-            tags.tags |> List.map (\tag -> a [ href "", class "tag-pill tag-default" ] [ text tag ])
+            tags.tags |> List.map (\tag -> a [ href "javascript:void(0)", class "tag-pill tag-default", onClick (FilterWithTag (Just tag)) ] [ text tag ])
 
         RemoteData.Failure _ ->
             [ text "" ]
@@ -117,8 +120,6 @@ view : Model -> Html Msg
 view model =
     div [ class "home-page" ]
         [ Banner.view Nothing
-        , div [] [ text (toString model) ]
-        , div [] [ button [ onClick FetchArticles ] [ text "Fetch articles" ] ]
         , div
             [ class "container page" ]
             [ div [ class "row" ]
@@ -126,8 +127,25 @@ view model =
                     [ div [ class "feed-toggle" ]
                         [ ul [ class "nav nav-pills outline-active" ]
                             [ li [ class "nav-item" ]
-                                [ a [ href "", class "nav-link active" ]
+                                [ a
+                                    [ href "javascript:void(0)"
+                                    , class
+                                        ("nav-link"
+                                            ++ (if model.tagFilter == Nothing then
+                                                    " active"
+                                                else
+                                                    ""
+                                               )
+                                        )
+                                    , onClick (FilterWithTag Nothing)
+                                    ]
                                     [ text "Global Feed" ]
+                                ]
+                            , li [ class "nav-item", hidden (model.tagFilter == Nothing) ]
+                                [ a [ href "javascript:void(0)", class "nav-link active" ]
+                                    [ i [ class "ion-pound" ] []
+                                    , text (" " ++ (Maybe.withDefault "" model.tagFilter))
+                                    ]
                                 ]
                             ]
                         ]
@@ -154,10 +172,22 @@ update msg model =
         FetchArticles ->
             ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
             , Cmd.batch
-                [ fetchArticles |> Cmd.map OnFetchArticles
+                [ fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
                 , fetchTags |> Cmd.map OnFetchTags
                 ]
             )
+
+        FilterWithTag tag ->
+            case tag of
+                Just tag ->
+                    ( { model | tagFilter = Just tag, articles = RemoteData.Loading }
+                    , fetchArticles 0 (Just tag) |> Cmd.map OnFetchArticles
+                    )
+
+                Nothing ->
+                    ( { model | tagFilter = Nothing, articles = RemoteData.Loading }
+                    , fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
+                    )
 
         OnFetchArticles response ->
             ( { model | articles = response }, Cmd.none )

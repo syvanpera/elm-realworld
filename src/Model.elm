@@ -8,8 +8,12 @@ type alias Session =
     }
 
 
+type alias Tag =
+    String
+
+
 type alias Tags =
-    { tags : List String }
+    { tags : List Tag }
 
 
 type alias Slug =
@@ -30,7 +34,7 @@ type alias Article =
     , description : String
     , createdAt : Date
     , updatedAt : Date
-    , tagList : List String
+    , tagList : List Tag
     , author : Author
     , favoritesCount : Int
     }
