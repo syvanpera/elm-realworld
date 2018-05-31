@@ -1,13 +1,19 @@
 module Page.Login exposing (Model, Msg, initialModel, view, update)
 
 import Html exposing (Html, div, h1, p, form, fieldset, input, button, text, a, ul, li)
-import Html.Attributes exposing (class, placeholder, type_, href, value)
-import Html.Events exposing (onInput)
+import Html.Attributes exposing (class, placeholder, type_, href, value, hidden)
+import Html.Events exposing (onInput, onSubmit)
+import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
+import Http
+import Model exposing (User)
+import Api exposing (authUser)
+import Debug
 
 
 type alias Model =
     { email : String
     , password : String
+    , errors : List String
     }
 
 
@@ -15,11 +21,13 @@ type Msg
     = NoOp
     | EmailInput String
     | PasswordInput String
+    | Login
+    | LoginResponse (Result Http.Error User)
 
 
 initialModel : Model
 initialModel =
-    Model "" ""
+    Model "" "" []
 
 
 view : Model -> Html Msg
@@ -34,11 +42,12 @@ view model =
                         [ a [ href "#/register" ]
                             [ text "Need an account?" ]
                         ]
-                    , ul [ class "error-messages" ]
-                        [ li []
-                            [ text "email or password is invalid" ]
-                        ]
-                    , form []
+                    , ul [ class "error-messages", hidden (List.isEmpty (model.errors)) ]
+                        (List.map
+                            (\error -> li [] [ text error ])
+                            model.errors
+                        )
+                    , form [ onSubmit Login ]
                         [ fieldset [ class "form-group" ]
                             [ input [ class "form-control form-control-lg", placeholder "Email", type_ "text", value model.email, onInput EmailInput ]
                                 []
@@ -67,3 +76,20 @@ update msg model =
 
         PasswordInput password ->
             ( { model | password = password }, Cmd.none )
+
+        Login ->
+            ( model, Http.send LoginResponse (authUser model.email model.password) )
+
+        LoginResponse (Err error) ->
+            let
+                _ =
+                    Debug.log "Login error" error
+            in
+                ( { model | errors = [ "something went wrong" ] }, Cmd.none )
+
+        LoginResponse (Ok user) ->
+            let
+                _ =
+                    Debug.log "Login ok" user
+            in
+                ( model, Cmd.none )

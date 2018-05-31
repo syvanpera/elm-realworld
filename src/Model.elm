@@ -8,6 +8,10 @@ type alias Session =
     }
 
 
+type alias Body =
+    String
+
+
 type alias Tag =
     String
 
@@ -32,6 +36,7 @@ type alias Article =
     { title : String
     , slug : Slug
     , description : String
+    , body : Body
     , createdAt : Date
     , updatedAt : Date
     , tagList : List Tag
@@ -43,4 +48,16 @@ type alias Article =
 type alias Articles =
     { articles : List Article
     , articlesCount : Int
+    }
+
+
+type alias User =
+    { id : Int
+    , email : String
+    , username : String
+    , token : String
+    , createdAt : Date
+    , updatedAt : Date
+    , bio : Maybe String
+    , image : Maybe String
     }

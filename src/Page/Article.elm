@@ -1,8 +1,9 @@
 module Page.Article exposing (Model, Msg, initialModel, init, view, update)
 
-import Html exposing (Html, div, text, h2, a, button, hr, p, i, span, img, form, textarea)
-import Html.Attributes exposing (class, href, src, id, placeholder, attribute)
+import Html exposing (Html, div, text, h2, a, button, hr, p, i, span, img, form, textarea, ul, li)
+import Html.Attributes exposing (class, href, src, id, placeholder, attribute, hidden)
 import RemoteData exposing (WebData)
+import Markdown
 import Model exposing (Article, Slug)
 import Api exposing (fetchArticle)
 import Util exposing (formatDate)
@@ -17,7 +18,7 @@ type alias Model =
 type Msg
     = NoOp
     | FetchArticle Slug
-    | OnFetchArticle (WebData Article)
+    | FetchArticleResponse (WebData Article)
 
 
 initialModel : Model
@@ -28,7 +29,7 @@ initialModel =
 init : Slug -> ( Model, Cmd Msg )
 init slug =
     ( { initialModel | article = RemoteData.Loading }
-    , fetchArticle slug |> Cmd.map OnFetchArticle
+    , fetchArticle slug |> Cmd.map FetchArticleResponse
     )
 
 
@@ -37,12 +38,11 @@ viewArticle article =
     div [ class "container page" ]
         [ div [ class "row article-content" ]
             [ div [ class "col-md-12" ]
-                [ p []
-                    [ text "Web development technologies have evolved at an incredible clip over the past few years." ]
-                , h2 [ id "introducing-ionic" ]
-                    [ text "Introducing RealWorld." ]
-                , p []
-                    [ text "It's a great solution for learning how other frameworks work." ]
+                [ Markdown.toHtml [] article.body
+                , ul [ class "tag-list", hidden (List.isEmpty article.tagList) ]
+                    [ li [ class "tag-default tag-pill tag-outline" ] [ text "spam" ]
+                    , li [ class "tag-default tag-pill tag-outline" ] [ text "documentation" ]
+                    ]
                 ]
             ]
         , hr []
@@ -68,59 +68,9 @@ viewArticle article =
                 , button [ class "btn btn-sm btn-outline-primary" ]
                     [ i [ class "ion-heart" ]
                         []
-                    , text " Favorite Post "
+                    , text " Favorite Article "
                     , span [ class "counter" ]
                         [ text ("(" ++ (toString article.favoritesCount) ++ ")") ]
-                    ]
-                ]
-            ]
-        , div [ class "row" ]
-            [ div [ class "col-xs-12 col-md-8 offset-md-2" ]
-                [ form [ class "card comment-form" ]
-                    [ div [ class "card-block" ]
-                        [ textarea [ class "form-control", placeholder "Write a comment...", attribute "rows" "3" ]
-                            []
-                        ]
-                    , div [ class "card-footer" ]
-                        [ img [ class "comment-author-img", src "http://i.imgur.com/Qr71crq.jpg" ]
-                            []
-                        , button [ class "btn btn-sm btn-primary" ]
-                            [ text "Post Comment" ]
-                        ]
-                    ]
-                , div [ class "card" ]
-                    [ div [ class "card-block" ]
-                        [ p [ class "card-text" ]
-                            [ text "With supporting text below as a natural lead-in to additional content." ]
-                        ]
-                    , div [ class "card-footer" ]
-                        [ a [ class "comment-author", href "" ]
-                            [ img [ class "comment-author-img", src "http://i.imgur.com/Qr71crq.jpg" ] [] ]
-                        , text " "
-                        , a [ class "comment-author", href "" ]
-                            [ text "Jacob Schmidt" ]
-                        , span [ class "date-posted" ]
-                            [ text "Dec 29th" ]
-                        ]
-                    ]
-                , div [ class "card" ]
-                    [ div [ class "card-block" ]
-                        [ p [ class "card-text" ]
-                            [ text "With supporting text below as a natural lead-in to additional content." ]
-                        ]
-                    , div [ class "card-footer" ]
-                        [ a [ class "comment-author", href "" ]
-                            [ img [ class "comment-author-img", src "http://i.imgur.com/Qr71crq.jpg" ] [] ]
-                        , text " "
-                        , a [ class "comment-author", href "" ]
-                            [ text "Jacob Schmidt" ]
-                        , span [ class "date-posted" ]
-                            [ text "Dec 29th" ]
-                        , span [ class "mod-options" ]
-                            [ i [ class "ion-edit" ] []
-                            , i [ class "ion-trash-a" ] []
-                            ]
-                        ]
                     ]
                 ]
             ]
@@ -149,8 +99,8 @@ update msg model =
 
         FetchArticle slug ->
             ( { model | article = RemoteData.Loading }
-            , fetchArticle slug |> Cmd.map OnFetchArticle
+            , fetchArticle slug |> Cmd.map FetchArticleResponse
             )
 
-        OnFetchArticle response ->
+        FetchArticleResponse response ->
             ( { model | article = response }, Cmd.none )

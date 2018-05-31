@@ -22,8 +22,8 @@ type Msg
     = NoOp
     | FetchArticles
     | FilterWithTag (Maybe Tag)
-    | OnFetchArticles (WebData Articles)
-    | OnFetchTags (WebData Tags)
+    | FetchArticlesResponse (WebData Articles)
+    | FetchTagsResponse (WebData Tags)
 
 
 initialModel : Model
@@ -35,8 +35,8 @@ init : ( Model, Cmd Msg )
 init =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
-        , fetchTags |> Cmd.map OnFetchTags
+        [ fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+        , fetchTags |> Cmd.map FetchTagsResponse
         ]
     )
 
@@ -172,8 +172,8 @@ update msg model =
         FetchArticles ->
             ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
             , Cmd.batch
-                [ fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
-                , fetchTags |> Cmd.map OnFetchTags
+                [ fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+                , fetchTags |> Cmd.map FetchTagsResponse
                 ]
             )
 
@@ -181,16 +181,16 @@ update msg model =
             case tag of
                 Just tag ->
                     ( { model | tagFilter = Just tag, articles = RemoteData.Loading }
-                    , fetchArticles 0 (Just tag) |> Cmd.map OnFetchArticles
+                    , fetchArticles 0 (Just tag) |> Cmd.map FetchArticlesResponse
                     )
 
                 Nothing ->
                     ( { model | tagFilter = Nothing, articles = RemoteData.Loading }
-                    , fetchArticles 0 Nothing |> Cmd.map OnFetchArticles
+                    , fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
                     )
 
-        OnFetchArticles response ->
+        FetchArticlesResponse response ->
             ( { model | articles = response }, Cmd.none )
 
-        OnFetchTags response ->
+        FetchTagsResponse response ->
             ( { model | tags = response }, Cmd.none )
