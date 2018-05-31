@@ -1,4 +1,4 @@
-module Page.Home exposing (Model, Msg, initialModel, view, update)
+module Page.Home exposing (Model, Msg, initialModel, init, view, update)
 
 import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
 import Html.Attributes exposing (class, href, src, hidden)
@@ -27,6 +27,16 @@ type Msg
 initialModel : Model
 initialModel =
     Model RemoteData.NotAsked RemoteData.NotAsked
+
+
+init : ( Model, Cmd Msg )
+init =
+    ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
+    , Cmd.batch
+        [ fetchArticles |> Cmd.map OnFetchArticles
+        , fetchTags |> Cmd.map OnFetchTags
+        ]
+    )
 
 
 formatDate : String -> String
@@ -136,7 +146,7 @@ view model =
                     , articleList model.articles
                     ]
                 , div [ class "col-md-3" ]
-                    [ div [ class "sidebar" ]
+                    [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
                         [ p [ hidden (model.tags == RemoteData.Loading) ] [ text "Popular Tags" ]
                         , div [ class "tag-list" ]
                             (tagList model.tags)
@@ -154,16 +164,12 @@ update msg model =
             ( model, Cmd.none )
 
         FetchArticles ->
-            let
-                _ =
-                    Debug.log "Fetch articles" model
-            in
-                ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
-                , Cmd.batch
-                    [ fetchArticles |> Cmd.map OnFetchArticles
-                    , fetchTags |> Cmd.map OnFetchTags
-                    ]
-                )
+            ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
+            , Cmd.batch
+                [ fetchArticles |> Cmd.map OnFetchArticles
+                , fetchTags |> Cmd.map OnFetchTags
+                ]
+            )
 
         OnFetchArticles response ->
             ( { model | articles = response }, Cmd.none )

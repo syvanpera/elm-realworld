@@ -9,7 +9,6 @@ import Footer
 import Page.Home as Home
 import Page.Login as Login
 import Page.Register as Register
-import Debug
 
 
 type alias Model =
@@ -41,10 +40,10 @@ type Page
 -- | Register
 
 
-initialModel : Route -> Model
-initialModel route =
+initialModel : Model
+initialModel =
     { appName = "Conduit"
-    , route = route
+    , route = Routing.Home
     , session = Nothing
     , page = Home
     , homeModel = Home.initialModel
@@ -55,11 +54,7 @@ initialModel route =
 
 init : Location -> ( Model, Cmd Msg )
 init location =
-    let
-        currentRoute =
-            parseLocation location
-    in
-        ( initialModel currentRoute, Cmd.none )
+    setRoute location initialModel
 
 
 view : Model -> Html Msg
@@ -92,12 +87,11 @@ setRoute location model =
     in
         case route of
             Routing.Home ->
-                -- let
-                --     pageCmd =
-                --         Home.init
-                -- in
-                --     ( { model | route = route, page = Home }, Cmd.map HomeMsg pageCmd )
-                ( { model | route = route, page = Home }, Cmd.none )
+                let
+                    ( pageModel, pageCmd ) =
+                        Home.init
+                in
+                    ( { model | route = route, page = Home, homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
 
             Routing.Login ->
                 ( { model | route = route, page = Login }, Cmd.none )
