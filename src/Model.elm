@@ -1,5 +1,7 @@
 module Model exposing (..)
 
+import Date exposing (Date)
+
 
 type alias Session =
     { username : String
@@ -10,7 +12,7 @@ type alias Tags =
     { tags : List String }
 
 
-type alias ArticleSlug =
+type alias Slug =
     String
 
 
@@ -24,9 +26,10 @@ type alias Author =
 
 type alias Article =
     { title : String
-    , slug : ArticleSlug
+    , slug : Slug
     , description : String
-    , createdAt : String
+    , createdAt : Date
+    , updatedAt : Date
     , tagList : List String
     , author : Author
     , favoritesCount : Int

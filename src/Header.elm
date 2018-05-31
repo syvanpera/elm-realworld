@@ -25,12 +25,12 @@ navigation session =
             ]
 
 
-view : String -> Maybe Session -> Html msg
-view appName session =
+view : Maybe Session -> Html msg
+view session =
     nav [ class "navbar navbar-light" ]
         [ div [ class "container" ]
             [ a [ href "#/", class "navbar-brand" ]
-                [ text (String.toLower appName) ]
+                [ text "conduit" ]
             , ul [ class "nav navbar-nav pull-xs-right" ]
                 ([ li [ class "nav-item" ]
                     [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]

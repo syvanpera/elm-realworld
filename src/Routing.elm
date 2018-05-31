@@ -1,11 +1,13 @@
 module Routing exposing (Route(..), parseLocation)
 
+import Model exposing (Slug)
 import Navigation exposing (Location)
 import UrlParser exposing (..)
 
 
 type Route
     = Home
+    | Article Slug
     | Login
     | Register
     | NotFound
@@ -17,6 +19,7 @@ matchers =
         [ map Home top
         , map Login (s "login")
         , map Register (s "register")
+        , map Article (s "article" </> string)
         ]
 
 

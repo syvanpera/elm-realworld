@@ -4,11 +4,10 @@ import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
 import Html.Attributes exposing (class, href, src, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Date
 import Model exposing (Articles, Article, Tags)
 import Api exposing (fetchArticles, fetchTags)
+import Util exposing (formatDate)
 import Banner
-import Debug
 
 
 type alias Model =
@@ -39,24 +38,6 @@ init =
     )
 
 
-formatDate : String -> String
-formatDate dateStr =
-    let
-        dateResult =
-            Date.fromString dateStr
-    in
-        case dateResult of
-            Ok date ->
-                (toString (Date.month date))
-                    ++ " "
-                    ++ (toString (Date.day date))
-                    ++ ", "
-                    ++ (toString (Date.year date))
-
-            Err _ ->
-                ""
-
-
 articlePreview : Article -> Html msg
 articlePreview article =
     div
@@ -76,7 +57,7 @@ articlePreview article =
                     ]
                 ]
             ]
-        , a [ class "preview-link", href ("/#/articles/" ++ article.slug) ]
+        , a [ class "preview-link", href ("/#/article/" ++ article.slug) ]
             [ h1 [] [ text article.title ]
             , p [] [ text article.description ]
             , span [] [ text "Read more..." ]
@@ -128,7 +109,7 @@ tagList tagsData =
 view : Model -> Html Msg
 view model =
     div [ class "home-page" ]
-        [ Banner.view "Conduit"
+        [ Banner.view Nothing
         , div [] [ text (toString model) ]
         , div [] [ button [ onClick FetchArticles ] [ text "Fetch articles" ] ]
         , div

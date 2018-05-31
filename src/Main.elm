@@ -7,16 +7,17 @@ import Routing exposing (Route(..), parseLocation)
 import Header
 import Footer
 import Page.Home as Home
+import Page.Article as Article
 import Page.Login as Login
 import Page.Register as Register
 
 
 type alias Model =
-    { appName : String
-    , route : Route
+    { route : Route
     , session : Maybe Session
     , page : Page
     , homeModel : Home.Model
+    , articleModel : Article.Model
     , loginModel : Login.Model
     , registerModel : Register.Model
     }
@@ -26,27 +27,25 @@ type Msg
     = NoOp
     | SetRoute Location
     | HomeMsg Home.Msg
+    | ArticleMsg Article.Msg
     | LoginMsg Login.Msg
     | RegisterMsg Register.Msg
 
 
 type Page
     = Home
+    | Article
     | Login
     | Register
 
 
-
--- | Register
-
-
 initialModel : Model
 initialModel =
-    { appName = "Conduit"
-    , route = Routing.Home
+    { route = Routing.Home
     , session = Nothing
     , page = Home
     , homeModel = Home.initialModel
+    , articleModel = Article.initialModel
     , loginModel = Login.initialModel
     , registerModel = Register.initialModel
     }
@@ -60,9 +59,9 @@ init location =
 view : Model -> Html Msg
 view model =
     div []
-        [ Header.view model.appName model.session
+        [ Header.view model.session
         , viewPage model
-        , Footer.view model.appName
+        , Footer.view
         ]
 
 
@@ -71,6 +70,9 @@ viewPage model =
     case model.page of
         Home ->
             Html.map HomeMsg (Home.view model.homeModel)
+
+        Article ->
+            Html.map ArticleMsg (Article.view model.articleModel)
 
         Login ->
             Html.map LoginMsg (Login.view model.loginModel)
@@ -92,6 +94,13 @@ setRoute location model =
                         Home.init
                 in
                     ( { model | route = route, page = Home, homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
+
+            Routing.Article slug ->
+                let
+                    ( pageModel, pageCmd ) =
+                        Article.init slug
+                in
+                    ( { model | route = route, page = Article, articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
 
             Routing.Login ->
                 ( { model | route = route, page = Login }, Cmd.none )
@@ -118,6 +127,13 @@ update msg model =
                     Home.update subMsg model.homeModel
             in
                 ( { model | homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
+
+        ArticleMsg subMsg ->
+            let
+                ( pageModel, pageCmd ) =
+                    Article.update subMsg model.articleModel
+            in
+                ( { model | articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
 
         LoginMsg subMsg ->
             let

@@ -1,10 +1,11 @@
-module Api exposing (fetchArticles, fetchTags)
+module Api exposing (fetchArticles, fetchTags, fetchArticle)
 
 import Http
-import Json.Decode as Decode
-import Json.Decode.Pipeline exposing (decode, required, optional)
+import Json.Decode as Decode exposing (at)
+import Json.Decode.Extra
+import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, ArticleSlug, Author, Tags)
+import Model exposing (Articles, Article, Slug, Author, Tags)
 
 
 baseApiUrl : String
@@ -33,9 +34,9 @@ fetchArticles =
         |> RemoteData.sendRequest
 
 
-fetchArticle : ArticleSlug -> Cmd (WebData Article)
+fetchArticle : Slug -> Cmd (WebData Article)
 fetchArticle slug =
-    Http.get (fetchArticleUrl slug) articleDecoder
+    Http.get (fetchArticleUrl slug) nestedArticleDecoder
         |> RemoteData.sendRequest
 
 
@@ -48,13 +49,21 @@ fetchTags =
 articlesDecoder : Decode.Decoder Articles
 articlesDecoder =
     decode Articles
-        |> required "articles" articleListDecoder
+        |> required "articles" (Decode.list articleDecoder)
         |> required "articlesCount" Decode.int
 
 
-articleListDecoder : Decode.Decoder (List Article)
-articleListDecoder =
-    Decode.list articleDecoder
+nestedArticleDecoder : Decode.Decoder Article
+nestedArticleDecoder =
+    decode Article
+        |> requiredAt [ "article", "title" ] Decode.string
+        |> requiredAt [ "article", "slug" ] Decode.string
+        |> requiredAt [ "article", "description" ] Decode.string
+        |> requiredAt [ "article", "createdAt" ] Json.Decode.Extra.date
+        |> requiredAt [ "article", "updatedAt" ] Json.Decode.Extra.date
+        |> requiredAt [ "article", "tagList" ] (Decode.list Decode.string)
+        |> requiredAt [ "article", "author" ] authorDecoder
+        |> requiredAt [ "article", "favoritesCount" ] Decode.int
 
 
 articleDecoder : Decode.Decoder Article
@@ -63,7 +72,8 @@ articleDecoder =
         |> required "title" Decode.string
         |> required "slug" Decode.string
         |> required "description" Decode.string
-        |> required "createdAt" Decode.string
+        |> required "createdAt" Json.Decode.Extra.date
+        |> required "updatedAt" Json.Decode.Extra.date
         |> required "tagList" (Decode.list Decode.string)
         |> required "author" authorDecoder
         |> required "favoritesCount" Decode.int
