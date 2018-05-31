@@ -40,34 +40,41 @@ init =
 
 articlePreview : Article -> Html msg
 articlePreview article =
-    div
-        [ class "article-preview" ]
-        [ div [ class "article-meta" ]
-            [ a [ href "" ]
-                [ img [ src article.author.image ] [] ]
-            , div [ class "info" ]
-                [ a [ class "author", href "" ] [ text article.author.username ]
-                , span [ class "date" ]
-                    [ text (formatDate article.createdAt) ]
-                ]
-            , div [ class "pull-xs-right" ]
-                [ button [ class "btn btn-sm btn-outline-primary" ]
-                    [ i [ class "ion-heart" ] []
-                    , text (" " ++ toString article.favoritesCount)
+    let
+        authorImg =
+            if not (String.isEmpty article.author.image) then
+                img [ src article.author.image ] []
+            else
+                img [] []
+    in
+        div
+            [ class "article-preview" ]
+            [ div [ class "article-meta" ]
+                [ a [ href "" ]
+                    [ authorImg ]
+                , div [ class "info" ]
+                    [ a [ class "author", href "" ] [ text article.author.username ]
+                    , span [ class "date" ]
+                        [ text (formatDate article.createdAt) ]
+                    ]
+                , div [ class "pull-xs-right" ]
+                    [ button [ class "btn btn-sm btn-outline-primary" ]
+                        [ i [ class "ion-heart" ] []
+                        , text (" " ++ toString article.favoritesCount)
+                        ]
                     ]
                 ]
+            , a [ class "preview-link", href ("/#/article/" ++ article.slug) ]
+                [ h1 [] [ text article.title ]
+                , p [] [ text article.description ]
+                , span [] [ text "Read more..." ]
+                , ul [ class "tag-list" ]
+                    (List.map
+                        (\tag -> (li [ class "tag-default tag-pill tag-outline" ] [ text tag ]))
+                        article.tagList
+                    )
+                ]
             ]
-        , a [ class "preview-link", href ("/#/article/" ++ article.slug) ]
-            [ h1 [] [ text article.title ]
-            , p [] [ text article.description ]
-            , span [] [ text "Read more..." ]
-            , ul [ class "tag-list" ]
-                (List.map
-                    (\tag -> (li [ class "tag-default tag-pill tag-outline" ] [ text tag ]))
-                    article.tagList
-                )
-            ]
-        ]
 
 
 articleList : WebData Articles -> Html msg
