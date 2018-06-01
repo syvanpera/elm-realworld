@@ -4,7 +4,7 @@ import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
 import Html.Attributes exposing (class, href, src, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Tags, Tag)
+import Model exposing (Articles, Article, Tags, Tag, Session)
 import Api exposing (fetchArticles, fetchTags)
 import Util exposing (formatDate)
 import Banner
@@ -14,21 +14,27 @@ import Debug
 type alias Model =
     { articles : WebData Articles
     , tags : WebData Tags
-    , tagFilter : Maybe Tag
+    , activeFeed : Feed
     }
+
+
+type Feed
+    = Global
+    | Personal
+    | Tagged Tag
 
 
 type Msg
     = NoOp
     | FetchArticles
-    | FilterWithTag (Maybe Tag)
+    | ActiveFeed Feed
     | FetchArticlesResponse (WebData Articles)
     | FetchTagsResponse (WebData Tags)
 
 
 initialModel : Model
 initialModel =
-    Model RemoteData.NotAsked RemoteData.NotAsked Nothing
+    Model RemoteData.NotAsked RemoteData.NotAsked Global
 
 
 init : ( Model, Cmd Msg )
@@ -110,45 +116,72 @@ tagList tagsData =
             [ text "Loading tags..." ]
 
         RemoteData.Success tags ->
-            tags.tags |> List.map (\tag -> a [ href "javascript:void(0)", class "tag-pill tag-default", onClick (FilterWithTag (Just tag)) ] [ text tag ])
+            tags.tags |> List.map (\tag -> a [ href "javascript:void(0)", class "tag-pill tag-default", onClick (ActiveFeed (Tagged tag)) ] [ text tag ])
 
         RemoteData.Failure _ ->
             [ text "" ]
 
 
-view : Model -> Html Msg
-view model =
+viewFeeds : Maybe Session -> Model -> Html Msg
+viewFeeds session model =
+    let
+        activeFeedTag =
+            case model.activeFeed of
+                Tagged tag ->
+                    tag
+
+                _ ->
+                    ""
+    in
+        ul [ class "nav nav-pills outline-active" ]
+            [ li [ class "nav-item", hidden (session == Nothing) ]
+                [ a
+                    [ href "javascript:void(0)"
+                    , class
+                        ("nav-link"
+                            ++ (if model.activeFeed == Personal then
+                                    " active"
+                                else
+                                    ""
+                               )
+                        )
+                    , onClick (ActiveFeed Personal)
+                    ]
+                    [ text "Your Feed" ]
+                ]
+            , li [ class "nav-item" ]
+                [ a
+                    [ href "javascript:void(0)"
+                    , class
+                        ("nav-link"
+                            ++ (if model.activeFeed == Global then
+                                    " active"
+                                else
+                                    ""
+                               )
+                        )
+                    , onClick (ActiveFeed Global)
+                    ]
+                    [ text "Global Feed" ]
+                ]
+            , li [ class "nav-item", hidden (model.activeFeed == Global || model.activeFeed == Personal) ]
+                [ a [ href "javascript:void(0)", class "nav-link active" ]
+                    [ i [ class "ion-pound" ] []
+                    , text (" " ++ activeFeedTag)
+                    ]
+                ]
+            ]
+
+
+view : Maybe Session -> Model -> Html Msg
+view session model =
     div [ class "home-page" ]
         [ Banner.view Nothing
         , div
             [ class "container page" ]
             [ div [ class "row" ]
                 [ div [ class "col-md-9" ]
-                    [ div [ class "feed-toggle" ]
-                        [ ul [ class "nav nav-pills outline-active" ]
-                            [ li [ class "nav-item" ]
-                                [ a
-                                    [ href "javascript:void(0)"
-                                    , class
-                                        ("nav-link"
-                                            ++ (if model.tagFilter == Nothing then
-                                                    " active"
-                                                else
-                                                    ""
-                                               )
-                                        )
-                                    , onClick (FilterWithTag Nothing)
-                                    ]
-                                    [ text "Global Feed" ]
-                                ]
-                            , li [ class "nav-item", hidden (model.tagFilter == Nothing) ]
-                                [ a [ href "javascript:void(0)", class "nav-link active" ]
-                                    [ i [ class "ion-pound" ] []
-                                    , text (" " ++ (Maybe.withDefault "" model.tagFilter))
-                                    ]
-                                ]
-                            ]
-                        ]
+                    [ div [ class "feed-toggle" ] [ viewFeeds session model ]
                     , articleList model.articles
                     ]
                 , div [ class "col-md-3" ]
@@ -177,16 +210,21 @@ update msg model =
                 ]
             )
 
-        FilterWithTag tag ->
-            case tag of
-                Just tag ->
-                    ( { model | tagFilter = Just tag, articles = RemoteData.Loading }
-                    , fetchArticles 0 (Just tag) |> Cmd.map FetchArticlesResponse
+        ActiveFeed feed ->
+            case feed of
+                Personal ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
                     )
 
-                Nothing ->
-                    ( { model | tagFilter = Nothing, articles = RemoteData.Loading }
+                Global ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
                     , fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+                    )
+
+                Tagged tag ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchArticles 0 (Just tag) |> Cmd.map FetchArticlesResponse
                     )
 
         FetchArticlesResponse response ->

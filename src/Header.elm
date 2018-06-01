@@ -3,6 +3,7 @@ module Header exposing (view)
 import Html exposing (Html, nav, div, a, ul, li, i, text)
 import Html.Attributes exposing (class, href)
 import Model exposing (Session)
+import Debug
 
 
 navigation : Maybe Session -> List (Html msg)
@@ -10,7 +11,7 @@ navigation session =
     case session of
         Just session ->
             [ li [ class "nav-item" ]
-                [ a [ class "nav-link", href "" ] [ i [ class "ion-compose" ] [], text " New Post" ] ]
+                [ a [ class "nav-link", href "" ] [ i [ class "ion-compose" ] [], text " New Article" ] ]
             , li [ class "nav-item" ]
                 [ a [ class "nav-link", href "" ] [ i [ class "ion-gear-a" ] [], text " Settings" ] ]
             , li [ class "nav-item" ]
@@ -27,15 +28,19 @@ navigation session =
 
 view : Maybe Session -> Html msg
 view session =
-    nav [ class "navbar navbar-light" ]
-        [ div [ class "container" ]
-            [ a [ href "#/", class "navbar-brand" ]
-                [ text "conduit" ]
-            , ul [ class "nav navbar-nav pull-xs-right" ]
-                ([ li [ class "nav-item" ]
-                    [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
-                 ]
-                    ++ (navigation session)
-                )
+    let
+        _ =
+            Debug.log "Session" session
+    in
+        nav [ class "navbar navbar-light" ]
+            [ div [ class "container" ]
+                [ a [ href "#/", class "navbar-brand" ]
+                    [ text "conduit" ]
+                , ul [ class "nav navbar-nav pull-xs-right" ]
+                    ([ li [ class "nav-item" ]
+                        [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
+                     ]
+                        ++ (navigation session)
+                    )
+                ]
             ]
-        ]

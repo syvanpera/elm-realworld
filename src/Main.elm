@@ -4,6 +4,7 @@ import Html exposing (Html, div, text)
 import Navigation exposing (Location)
 import Model exposing (Session)
 import Routing exposing (Route(..), parseLocation)
+import Ports
 import Header
 import Footer
 import Page.Home as Home
@@ -30,6 +31,7 @@ type Msg
     | ArticleMsg Article.Msg
     | LoginMsg Login.Msg
     | RegisterMsg Register.Msg
+    | SessionChanged Session
 
 
 type Page
@@ -51,9 +53,9 @@ initialModel =
     }
 
 
-init : Location -> ( Model, Cmd Msg )
-init location =
-    setRoute location initialModel
+init : Maybe Session -> Location -> ( Model, Cmd Msg )
+init session location =
+    setRoute location { initialModel | session = session }
 
 
 view : Model -> Html Msg
@@ -69,7 +71,7 @@ viewPage : Model -> Html Msg
 viewPage model =
     case model.page of
         Home ->
-            Html.map HomeMsg (Home.view model.homeModel)
+            Html.map HomeMsg (Home.view model.session model.homeModel)
 
         Article ->
             Html.map ArticleMsg (Article.view model.articleModel)
@@ -149,12 +151,24 @@ update msg model =
             in
                 ( { model | registerModel = pageModel }, Cmd.map RegisterMsg pageCmd )
 
+        SessionChanged session ->
+            let
+                _ =
+                    Debug.log "session changed" session
+            in
+                ( { model | session = Just session }, Cmd.none )
 
-main : Program Never Model Msg
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Ports.onSessionChange SessionChanged
+
+
+main : Program (Maybe Session) Model Msg
 main =
-    Navigation.program SetRoute
+    Navigation.programWithFlags SetRoute
         { init = init
         , view = view
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }

@@ -29,7 +29,7 @@ viewArticle article =
             , button [ class "btn btn-sm btn-outline-primary" ]
                 [ i [ class "ion-heart" ]
                     []
-                , text " Favorite Post "
+                , text " Favorite Article "
                 , span [ class "counter" ]
                     [ text ("(" ++ (toString article.favoritesCount) ++ ")") ]
                 ]

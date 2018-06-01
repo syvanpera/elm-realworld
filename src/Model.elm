@@ -5,6 +5,7 @@ import Date exposing (Date)
 
 type alias Session =
     { username : String
+    , token : String
     }
 
 

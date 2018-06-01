@@ -5,8 +5,9 @@ import Html.Attributes exposing (class, placeholder, type_, href, value, hidden)
 import Html.Events exposing (onInput, onSubmit)
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Http
-import Model exposing (User)
+import Model exposing (User, Session)
 import Api exposing (authUser)
+import Ports exposing (storeSession)
 import Debug
 
 
@@ -92,4 +93,4 @@ update msg model =
                 _ =
                     Debug.log "Login ok" user
             in
-                ( model, Cmd.none )
+                ( model, storeSession (Session user.username user.token) )
