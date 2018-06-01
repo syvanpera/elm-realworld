@@ -40,9 +40,12 @@ viewArticle article =
             [ div [ class "col-md-12" ]
                 [ Markdown.toHtml [] article.body
                 , ul [ class "tag-list", hidden (List.isEmpty article.tagList) ]
-                    [ li [ class "tag-default tag-pill tag-outline" ] [ text "spam" ]
-                    , li [ class "tag-default tag-pill tag-outline" ] [ text "documentation" ]
-                    ]
+                    (List.map
+                        (\tag ->
+                            li [ class "tag-default tag-pill tag-outline" ] [ text tag ]
+                        )
+                        article.tagList
+                    )
                 ]
             ]
         , hr []
