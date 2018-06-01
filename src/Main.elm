@@ -126,7 +126,7 @@ update msg model =
         HomeMsg subMsg ->
             let
                 ( pageModel, pageCmd ) =
-                    Home.update subMsg model.homeModel
+                    Home.update subMsg model.homeModel model.session
             in
                 ( { model | homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
 

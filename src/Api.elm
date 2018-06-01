@@ -1,4 +1,4 @@
-module Api exposing (fetchArticles, fetchTags, fetchArticle, authUser)
+module Api exposing (fetchArticles, fetchTags, fetchArticle, fetchFeed, authUser)
 
 import Http
 import Json.Decode as Decode exposing (at, nullable)
@@ -6,8 +6,9 @@ import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt)
 import Json.Encode as Encode
 import Json.Encode.Extra as EncodeExtra
+import HttpBuilder exposing (RequestBuilder, withExpect, withHeader, toRequest)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Slug, Author, Tags, Tag, User)
+import Model exposing (Articles, Article, Slug, Author, Tags, Tag, User, Session)
 
 
 baseApiUrl : String
@@ -39,14 +40,32 @@ fetchArticleUrl slug =
     baseApiUrl ++ "articles/" ++ slug
 
 
+fetchFeedUrl : Int -> String
+fetchFeedUrl offset =
+    baseApiUrl ++ "articles/feed?limit=10&offset=" ++ (toString offset)
+
+
 authUrl : String
 authUrl =
     baseApiUrl ++ "users/login"
 
 
+withAuthorization : Maybe Session -> RequestBuilder a -> RequestBuilder a
+withAuthorization session builder =
+    case session of
+        Just session ->
+            builder
+                |> withHeader "authorization" ("Token " ++ session.token)
+
+        Nothing ->
+            builder
+
+
 fetchArticles : Int -> Maybe Tag -> Cmd (WebData Articles)
 fetchArticles offset tag =
-    Http.get (fetchArticlesUrl offset tag) articlesDecoder
+    HttpBuilder.get (fetchArticlesUrl offset tag)
+        |> withExpect (Http.expectJson articlesDecoder)
+        |> toRequest
         |> RemoteData.sendRequest
 
 
@@ -59,6 +78,15 @@ fetchArticle slug =
 fetchTags : Cmd (WebData Tags)
 fetchTags =
     Http.get fetchTagsUrl tagsDecoder
+        |> RemoteData.sendRequest
+
+
+fetchFeed : Int -> Maybe Session -> Cmd (WebData Articles)
+fetchFeed offset session =
+    HttpBuilder.get (fetchFeedUrl offset)
+        |> withExpect (Http.expectJson articlesDecoder)
+        |> withAuthorization session
+        |> toRequest
         |> RemoteData.sendRequest
 
 

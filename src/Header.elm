@@ -28,19 +28,15 @@ navigation session =
 
 view : Maybe Session -> Html msg
 view session =
-    let
-        _ =
-            Debug.log "Session" session
-    in
-        nav [ class "navbar navbar-light" ]
-            [ div [ class "container" ]
-                [ a [ href "#/", class "navbar-brand" ]
-                    [ text "conduit" ]
-                , ul [ class "nav navbar-nav pull-xs-right" ]
-                    ([ li [ class "nav-item" ]
-                        [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
-                     ]
-                        ++ (navigation session)
-                    )
-                ]
+    nav [ class "navbar navbar-light" ]
+        [ div [ class "container" ]
+            [ a [ href "#/", class "navbar-brand" ]
+                [ text "conduit" ]
+            , ul [ class "nav navbar-nav pull-xs-right" ]
+                ([ li [ class "nav-item" ]
+                    [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
+                 ]
+                    ++ (navigation session)
+                )
             ]
+        ]

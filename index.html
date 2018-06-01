@@ -20,10 +20,11 @@
      app.ports.storeSession.subscribe(function(session) {
        console.log("Storing session ", session);
        localStorage.setItem('session', JSON.stringify(session));
-       app.ports.onSessionChange.send(JSON.parse(session));
+       app.ports.onSessionChange.send(session);
      });
 
      window.addEventListener("storage", function(event) {
+       console.log("Storage change ", event);
        if (event.storageArea === localStorage && event.key === "session") {
          console.log("Sending session ", event.newValue);
          app.ports.onSessionChange.send(JSON.parse(event.newValue));

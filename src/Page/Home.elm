@@ -5,7 +5,7 @@ import Html.Attributes exposing (class, href, src, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Article, Tags, Tag, Session)
-import Api exposing (fetchArticles, fetchTags)
+import Api exposing (fetchArticles, fetchTags, fetchFeed)
 import Util exposing (formatDate)
 import Banner
 import Debug
@@ -196,8 +196,8 @@ view session model =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Model -> Maybe Session -> ( Model, Cmd Msg )
+update msg model session =
     case msg of
         NoOp ->
             ( model, Cmd.none )
@@ -214,7 +214,7 @@ update msg model =
             case feed of
                 Personal ->
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+                    , fetchFeed 0 session |> Cmd.map FetchArticlesResponse
                     )
 
                 Global ->
