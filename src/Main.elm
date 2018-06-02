@@ -9,6 +9,7 @@ import Header
 import Footer
 import Page.Home as Home
 import Page.Article as Article
+import Page.Profile as Profile
 import Page.Login as Login
 import Page.Register as Register
 
@@ -19,6 +20,7 @@ type alias Model =
     , page : Page
     , homeModel : Home.Model
     , articleModel : Article.Model
+    , profileModel : Profile.Model
     , loginModel : Login.Model
     , registerModel : Register.Model
     }
@@ -29,6 +31,7 @@ type Msg
     | SetRoute Location
     | HomeMsg Home.Msg
     | ArticleMsg Article.Msg
+    | ProfileMsg Profile.Msg
     | LoginMsg Login.Msg
     | RegisterMsg Register.Msg
     | SessionChanged Session
@@ -37,6 +40,7 @@ type Msg
 type Page
     = Home
     | Article
+    | Profile
     | Login
     | Register
 
@@ -48,6 +52,7 @@ initialModel =
     , page = Home
     , homeModel = Home.initialModel
     , articleModel = Article.initialModel
+    , profileModel = Profile.initialModel
     , loginModel = Login.initialModel
     , registerModel = Register.initialModel
     }
@@ -74,7 +79,10 @@ viewPage model =
             Html.map HomeMsg (Home.view model.session model.homeModel)
 
         Article ->
-            Html.map ArticleMsg (Article.view model.articleModel)
+            Html.map ArticleMsg (Article.view model.articleModel model.session)
+
+        Profile ->
+            Html.map ProfileMsg (Profile.view model.profileModel)
 
         Login ->
             Html.map LoginMsg (Login.view model.loginModel)
@@ -103,6 +111,9 @@ setRoute location model =
                         Article.init slug
                 in
                     ( { model | route = route, page = Article, articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
+
+            Routing.Profile username ->
+                ( { model | route = route, page = Profile }, Cmd.none )
 
             Routing.Login ->
                 ( { model | route = route, page = Login }, Cmd.none )
@@ -136,6 +147,13 @@ update msg model =
                     Article.update subMsg model.articleModel
             in
                 ( { model | articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
+
+        ProfileMsg subMsg ->
+            let
+                ( pageModel, pageCmd ) =
+                    Profile.update subMsg model.profileModel
+            in
+                ( { model | profileModel = pageModel }, Cmd.map ProfileMsg pageCmd )
 
         LoginMsg subMsg ->
             let

@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Article, Tags, Tag, Session)
 import Api exposing (fetchArticles, fetchTags, fetchFeed)
-import Util exposing (formatDate)
+import Util exposing (formatDate, isLoggedIn)
 import Banner
 import Debug
 
@@ -59,10 +59,10 @@ articlePreview article =
         div
             [ class "article-preview" ]
             [ div [ class "article-meta" ]
-                [ a [ href "" ]
+                [ a [ href ("#/profile/" ++ article.author.username) ]
                     [ authorImg ]
                 , div [ class "info" ]
-                    [ a [ class "author", href "" ] [ text article.author.username ]
+                    [ a [ class "author", href ("#/profile/" ++ article.author.username) ] [ text article.author.username ]
                     , span [ class "date" ]
                         [ text (formatDate article.createdAt) ]
                     ]
@@ -134,7 +134,7 @@ viewFeeds session model =
                     ""
     in
         ul [ class "nav nav-pills outline-active" ]
-            [ li [ class "nav-item", hidden (session == Nothing) ]
+            [ li [ class "nav-item", hidden (not <| isLoggedIn session) ]
                 [ a
                     [ href "javascript:void(0)"
                     , class

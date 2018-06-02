@@ -1,4 +1,4 @@
-module Api exposing (fetchArticles, fetchTags, fetchArticle, fetchFeed, authUser)
+module Api exposing (fetchArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, authUser)
 
 import Http
 import Json.Decode as Decode exposing (at, nullable)
@@ -8,7 +8,7 @@ import Json.Encode as Encode
 import Json.Encode.Extra as EncodeExtra
 import HttpBuilder exposing (RequestBuilder, withExpect, withHeader, toRequest)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Slug, Author, Tags, Tag, User, Session)
+import Model exposing (Articles, Article, Comments, Comment, Slug, Author, Tags, Tag, User, Session)
 
 
 baseApiUrl : String
@@ -40,9 +40,19 @@ fetchArticleUrl slug =
     baseApiUrl ++ "articles/" ++ slug
 
 
+fetchCommentsUrl : String -> String
+fetchCommentsUrl slug =
+    baseApiUrl ++ "articles/" ++ slug ++ "/comments"
+
+
 fetchFeedUrl : Int -> String
 fetchFeedUrl offset =
     baseApiUrl ++ "articles/feed?limit=10&offset=" ++ (toString offset)
+
+
+fetchProfileUrl : String -> String
+fetchProfileUrl username =
+    baseApiUrl ++ "profiles/" ++ username
 
 
 authUrl : String
@@ -72,6 +82,12 @@ fetchArticles offset tag =
 fetchArticle : Slug -> Cmd (WebData Article)
 fetchArticle slug =
     Http.get (fetchArticleUrl slug) articleDecoderWithBody
+        |> RemoteData.sendRequest
+
+
+fetchComments : Slug -> Cmd (WebData Comments)
+fetchComments slug =
+    Http.get (fetchCommentsUrl slug) commentsDecoder
         |> RemoteData.sendRequest
 
 
@@ -143,6 +159,22 @@ articleDecoder =
         |> required "tagList" (Decode.list Decode.string)
         |> required "author" authorDecoder
         |> required "favoritesCount" Decode.int
+
+
+commentsDecoder : Decode.Decoder Comments
+commentsDecoder =
+    decode Comments
+        |> required "comments" (Decode.list commentDecoder)
+
+
+commentDecoder : Decode.Decoder Comment
+commentDecoder =
+    decode Comment
+        |> required "id" Decode.int
+        |> required "createdAt" Json.Decode.Extra.date
+        |> required "updatedAt" Json.Decode.Extra.date
+        |> required "body" Decode.string
+        |> required "author" authorDecoder
 
 
 authorDecoder : Decode.Decoder Author
