@@ -6,7 +6,7 @@ import Html.Events exposing (onInput, onSubmit)
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Http
 import Model exposing (User, Session)
-import Api exposing (authUser)
+import Api exposing (loginUser)
 import Ports exposing (storeSession)
 import Debug
 
@@ -79,7 +79,7 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         Login ->
-            ( model, Http.send LoginResponse (authUser model.email model.password) )
+            ( model, Http.send LoginResponse (loginUser model.email model.password) )
 
         LoginResponse (Err error) ->
             let

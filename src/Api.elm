@@ -1,4 +1,4 @@
-module Api exposing (fetchArticles, fetchUserArticles, fetchFavoriteArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, fetchProfile, authUser)
+module Api exposing (fetchArticles, fetchUserArticles, fetchFavoriteArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, fetchProfile, loginUser, registerUser)
 
 import Http
 import Json.Decode as Decode exposing (at, nullable)
@@ -65,8 +65,13 @@ fetchProfileUrl username =
     baseApiUrl ++ "profiles/" ++ username
 
 
-authUrl : String
-authUrl =
+registerUrl : String
+registerUrl =
+    baseApiUrl ++ "users"
+
+
+loginUrl : String
+loginUrl =
     baseApiUrl ++ "users/login"
 
 
@@ -138,8 +143,8 @@ fetchProfile username =
         |> RemoteData.sendRequest
 
 
-authUser : String -> String -> Http.Request User
-authUser email password =
+loginUser : String -> String -> Http.Request User
+loginUser email password =
     let
         user =
             Encode.object
@@ -151,7 +156,24 @@ authUser email password =
             Encode.object [ ( "user", user ) ]
                 |> Http.jsonBody
     in
-        Http.post authUrl body userDecoder
+        Http.post loginUrl body userDecoder
+
+
+registerUser : String -> String -> String -> Http.Request User
+registerUser username email password =
+    let
+        user =
+            Encode.object
+                [ ( "username", Encode.string username )
+                , ( "email", Encode.string email )
+                , ( "password", Encode.string password )
+                ]
+
+        body =
+            Encode.object [ ( "user", user ) ]
+                |> Http.jsonBody
+    in
+        Http.post registerUrl body userDecoder
 
 
 

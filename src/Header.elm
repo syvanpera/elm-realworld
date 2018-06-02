@@ -15,7 +15,7 @@ navigation session =
             , li [ class "nav-item" ]
                 [ a [ class "nav-link", href "" ] [ i [ class "ion-gear-a" ] [], text " Settings" ] ]
             , li [ class "nav-item" ]
-                [ a [ class "nav-link", href "" ] [ text session.username ] ]
+                [ a [ class "nav-link", href ("#/profile/" ++ session.username) ] [ text session.username ] ]
             ]
 
         Nothing ->
