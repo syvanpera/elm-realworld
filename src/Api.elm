@@ -1,14 +1,14 @@
-module Api exposing (fetchArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, authUser)
+module Api exposing (fetchArticles, fetchUserArticles, fetchFavoriteArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, fetchProfile, authUser)
 
 import Http
 import Json.Decode as Decode exposing (at, nullable)
 import Json.Decode.Extra
-import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt)
+import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt, optionalAt)
 import Json.Encode as Encode
 import Json.Encode.Extra as EncodeExtra
 import HttpBuilder exposing (RequestBuilder, withExpect, withHeader, toRequest)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Comments, Comment, Slug, Author, Tags, Tag, User, Session)
+import Model exposing (Articles, Article, Comments, Comment, Slug, Profile, Tags, Tag, User, Session)
 
 
 baseApiUrl : String
@@ -16,8 +16,8 @@ baseApiUrl =
     "https://conduit.productionready.io/api/"
 
 
-fetchArticlesUrl : Int -> Maybe Tag -> String
-fetchArticlesUrl offset tag =
+fetchArticlesUrl : Int -> Int -> Maybe Tag -> String
+fetchArticlesUrl offset limit tag =
     let
         tagParam =
             case tag of
@@ -27,7 +27,17 @@ fetchArticlesUrl offset tag =
                 Nothing ->
                     ""
     in
-        baseApiUrl ++ "articles?limit=10&offset=" ++ (toString offset) ++ tagParam
+        baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ tagParam
+
+
+fetchUserArticlesUrl : Int -> Int -> String -> String
+fetchUserArticlesUrl offset limit username =
+    baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ "&author=" ++ username
+
+
+fetchFavoriteArticlesUrl : Int -> Int -> String -> String
+fetchFavoriteArticlesUrl offset limit username =
+    baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ "&favorited=" ++ username
 
 
 fetchTagsUrl : String
@@ -71,9 +81,25 @@ withAuthorization session builder =
             builder
 
 
-fetchArticles : Int -> Maybe Tag -> Cmd (WebData Articles)
-fetchArticles offset tag =
-    HttpBuilder.get (fetchArticlesUrl offset tag)
+fetchArticles : Int -> Int -> Maybe Tag -> Cmd (WebData Articles)
+fetchArticles offset limit tag =
+    HttpBuilder.get (fetchArticlesUrl offset limit tag)
+        |> withExpect (Http.expectJson articlesDecoder)
+        |> toRequest
+        |> RemoteData.sendRequest
+
+
+fetchUserArticles : Int -> Int -> String -> Cmd (WebData Articles)
+fetchUserArticles offset limit username =
+    HttpBuilder.get (fetchUserArticlesUrl offset limit username)
+        |> withExpect (Http.expectJson articlesDecoder)
+        |> toRequest
+        |> RemoteData.sendRequest
+
+
+fetchFavoriteArticles : Int -> Int -> String -> Cmd (WebData Articles)
+fetchFavoriteArticles offset limit username =
+    HttpBuilder.get (fetchFavoriteArticlesUrl offset limit username)
         |> withExpect (Http.expectJson articlesDecoder)
         |> toRequest
         |> RemoteData.sendRequest
@@ -103,6 +129,12 @@ fetchFeed offset session =
         |> withExpect (Http.expectJson articlesDecoder)
         |> withAuthorization session
         |> toRequest
+        |> RemoteData.sendRequest
+
+
+fetchProfile : String -> Cmd (WebData Profile)
+fetchProfile username =
+    Http.get (fetchProfileUrl username) nestedProfileDecoder
         |> RemoteData.sendRequest
 
 
@@ -143,7 +175,7 @@ articleDecoderWithBody =
         |> requiredAt [ "article", "createdAt" ] Json.Decode.Extra.date
         |> requiredAt [ "article", "updatedAt" ] Json.Decode.Extra.date
         |> requiredAt [ "article", "tagList" ] (Decode.list Decode.string)
-        |> requiredAt [ "article", "author" ] authorDecoder
+        |> requiredAt [ "article", "author" ] profileDecoder
         |> requiredAt [ "article", "favoritesCount" ] Decode.int
 
 
@@ -157,7 +189,7 @@ articleDecoder =
         |> required "createdAt" Json.Decode.Extra.date
         |> required "updatedAt" Json.Decode.Extra.date
         |> required "tagList" (Decode.list Decode.string)
-        |> required "author" authorDecoder
+        |> required "author" profileDecoder
         |> required "favoritesCount" Decode.int
 
 
@@ -174,12 +206,21 @@ commentDecoder =
         |> required "createdAt" Json.Decode.Extra.date
         |> required "updatedAt" Json.Decode.Extra.date
         |> required "body" Decode.string
-        |> required "author" authorDecoder
+        |> required "author" profileDecoder
 
 
-authorDecoder : Decode.Decoder Author
-authorDecoder =
-    decode Author
+nestedProfileDecoder : Decode.Decoder Profile
+nestedProfileDecoder =
+    decode Profile
+        |> requiredAt [ "profile", "username" ] Decode.string
+        |> optionalAt [ "profile", "bio" ] Decode.string ""
+        |> requiredAt [ "profile", "image" ] Decode.string
+        |> requiredAt [ "profile", "following" ] Decode.bool
+
+
+profileDecoder : Decode.Decoder Profile
+profileDecoder =
+    decode Profile
         |> required "username" Decode.string
         |> optional "bio" Decode.string ""
         |> required "image" Decode.string

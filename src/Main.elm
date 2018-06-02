@@ -113,7 +113,11 @@ setRoute location model =
                     ( { model | route = route, page = Article, articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
 
             Routing.Profile username ->
-                ( { model | route = route, page = Profile }, Cmd.none )
+                let
+                    ( pageModel, pageCmd ) =
+                        Profile.init username
+                in
+                    ( { model | route = route, page = Profile, profileModel = pageModel }, Cmd.map ProfileMsg pageCmd )
 
             Routing.Login ->
                 ( { model | route = route, page = Login }, Cmd.none )

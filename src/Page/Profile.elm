@@ -1,96 +1,115 @@
-module Page.Profile exposing (Model, Msg, initialModel, view, update)
+module Page.Profile exposing (Model, Msg, initialModel, init, view, update)
 
 import Html exposing (Html, div, text, p, img, h1, h4, button, ul, li, a, i, span)
 import Html.Attributes exposing (class, src, href)
+import Html.Events exposing (onClick)
+import RemoteData exposing (WebData)
+import Model exposing (Profile, Articles, Article)
+import Api exposing (fetchProfile, fetchArticles, fetchUserArticles, fetchFavoriteArticles)
+import Util exposing (viewArticleList)
 
 
 type alias Model =
-    { foo : String
+    { profile : WebData Profile
+    , articles : WebData Articles
+    , activeFeed : Feed
     }
+
+
+type Feed
+    = Personal
+    | Favorite
 
 
 type Msg
     = NoOp
+    | ActiveFeed Feed
+    | FetchProfileResponse (WebData Profile)
+    | FetchArticlesResponse (WebData Articles)
 
 
 initialModel : Model
 initialModel =
-    Model ""
+    Model RemoteData.NotAsked RemoteData.NotAsked Personal
+
+
+init : String -> ( Model, Cmd Msg )
+init username =
+    ( { initialModel | profile = RemoteData.Loading, articles = RemoteData.Loading }
+    , Cmd.batch
+        [ fetchProfile username |> Cmd.map FetchProfileResponse
+        , fetchUserArticles 0 5 username |> Cmd.map FetchArticlesResponse
+        ]
+    )
+
+
+viewProfileInfo : WebData Profile -> Html Msg
+viewProfileInfo profile =
+    case profile of
+        RemoteData.Success profile ->
+            div [ class "user-info" ]
+                [ div [ class "container" ]
+                    [ div [ class "row" ]
+                        [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
+                            [ img [ class "user-img", src profile.image ] []
+                            , h4 [] [ text profile.username ]
+                            , p []
+                                [ text profile.bio ]
+                            , button [ class "btn btn-sm btn-outline-secondary action-btn" ]
+                                [ i [ class "ion-plus-round" ] []
+                                , text (" Follow " ++ profile.username)
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+
+        _ ->
+            text ""
 
 
 view : Model -> Html Msg
 view model =
     div [ class "profile-page" ]
-        [ div [ class "user-info" ]
-            [ div [ class "container" ]
-                [ div [ class "row" ]
-                    [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
-                        [ img [ class "user-img", src "http://i.imgur.com/Qr71crq.jpg" ] []
-                        , h4 [] [ text "Eric Simons" ]
-                        , p []
-                            [ text "Cofounder @GoThinkster, lived in Aol's HQ for a few months, kinda looks like Peeta from the Hunger Games          " ]
-                        , button [ class "btn btn-sm btn-outline-secondary action-btn" ]
-                            [ i [ class "ion-plus-round" ] []
-                            , text " Follow Eric Simons"
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+        [ viewProfileInfo model.profile
         , div [ class "container" ]
             [ div [ class "row" ]
                 [ div [ class "col-xs-12 col-md-10 offset-md-1" ]
                     [ div [ class "articles-toggle" ]
                         [ ul [ class "nav nav-pills outline-active" ]
                             [ li [ class "nav-item" ]
-                                [ a [ class "nav-link active", href "" ] [ text "My Articles" ] ]
+                                [ a
+                                    [ class
+                                        ("nav-link"
+                                            ++ (if model.activeFeed == Personal then
+                                                    " active"
+                                                else
+                                                    ""
+                                               )
+                                        )
+                                    , href "javascript:void(0)"
+                                    , onClick (ActiveFeed Personal)
+                                    ]
+                                    [ text "My Articles" ]
+                                ]
                             , li [ class "nav-item" ]
-                                [ a [ class "nav-link", href "" ] [ text "Favorited Articles" ] ]
-                            ]
-                        ]
-                    , div [ class "article-preview" ]
-                        [ div [ class "article-meta" ]
-                            [ a [ href "" ] [ img [ src "http://i.imgur.com/Qr71crq.jpg" ] [] ]
-                            , div [ class "info" ]
-                                [ a [ class "author", href "" ] [ text "Eric Simons" ]
-                                , span [ class "date" ] [ text "January 20th" ]
-                                ]
-                            , button [ class "btn btn-outline-primary btn-sm pull-xs-right" ]
-                                [ i [ class "ion-heart" ] []
-                                , text "29"
-                                ]
-                            ]
-                        , a [ class "preview-link", href "" ]
-                            [ h1 [] [ text "How to build webapps that scale" ]
-                            , p [] [ text "This is the description for the post." ]
-                            , span [] [ text "Read more..." ]
-                            ]
-                        ]
-                    , div [ class "article-preview" ]
-                        [ div [ class "article-meta" ]
-                            [ a [ href "" ] [ img [ src "http://i.imgur.com/N4VcUeJ.jpg" ] [] ]
-                            , div [ class "info" ]
-                                [ a [ class "author", href "" ] [ text "Albert Pai" ]
-                                , span [ class "date" ] [ text "January 20th" ]
-                                ]
-                            , button [ class "btn btn-outline-primary btn-sm pull-xs-right" ]
-                                [ i [ class "ion-heart" ] []
-                                , text "32"
-                                ]
-                            ]
-                        , a [ class "preview-link", href "" ]
-                            [ h1 []
-                                [ text "The song you won't ever stop singing. No matter how hard you try." ]
-                            , p [] [ text "This is the description for the post." ]
-                            , span [] [ text "Read more..." ]
-                            , ul [ class "tag-list" ]
-                                [ li [ class "tag-default tag-pill tag-outline" ]
-                                    [ text "Music" ]
-                                , li [ class "tag-default tag-pill tag-outline" ]
-                                    [ text "Song" ]
+                                [ a
+                                    [ class
+                                        ("nav-link"
+                                            ++ (if model.activeFeed == Favorite then
+                                                    " active"
+                                                else
+                                                    ""
+                                               )
+                                        )
+                                    , href "javascript:void(0)"
+                                    , onClick (ActiveFeed Favorite)
+                                    ]
+                                    [ text "Favorited Articles" ]
                                 ]
                             ]
                         ]
+                    , viewArticleList model.articles
                     ]
                 ]
             ]
@@ -102,3 +121,21 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        ActiveFeed feed ->
+            case feed of
+                Personal ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchUserArticles 0 5 "jojojojo123123" |> Cmd.map FetchArticlesResponse
+                    )
+
+                Favorite ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchFavoriteArticles 0 5 "jojojojo123123" |> Cmd.map FetchArticlesResponse
+                    )
+
+        FetchProfileResponse response ->
+            ( { model | profile = response }, Cmd.none )
+
+        FetchArticlesResponse response ->
+            ( { model | articles = response }, Cmd.none )

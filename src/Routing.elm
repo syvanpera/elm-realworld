@@ -8,6 +8,7 @@ import UrlParser exposing (..)
 type Route
     = Home
     | Article Slug
+    | Profile String
     | Login
     | Register
     | NotFound
@@ -20,6 +21,7 @@ matchers =
         , map Login (s "login")
         , map Register (s "register")
         , map Article (s "article" </> string)
+        , map Profile (s "profile" </> string)
         ]
 
 

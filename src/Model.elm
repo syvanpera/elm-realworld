@@ -25,7 +25,7 @@ type alias Slug =
     String
 
 
-type alias Author =
+type alias Profile =
     { username : String
     , bio : String
     , image : String
@@ -41,7 +41,7 @@ type alias Article =
     , createdAt : Date
     , updatedAt : Date
     , tagList : List Tag
-    , author : Author
+    , author : Profile
     , favoritesCount : Int
     }
 
@@ -49,6 +49,20 @@ type alias Article =
 type alias Articles =
     { articles : List Article
     , articlesCount : Int
+    }
+
+
+type alias Comment =
+    { id : Int
+    , createdAt : Date
+    , updatedAt : Date
+    , body : String
+    , author : Profile
+    }
+
+
+type alias Comments =
+    { comments : List Comment
     }
 
 

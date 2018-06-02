@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Article, Tags, Tag, Session)
 import Api exposing (fetchArticles, fetchTags, fetchFeed)
-import Util exposing (formatDate, isLoggedIn)
+import Util exposing (formatDate, isLoggedIn, viewArticleList)
 import Banner
 import Debug
 
@@ -41,69 +41,10 @@ init : ( Model, Cmd Msg )
 init =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+        [ fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
         , fetchTags |> Cmd.map FetchTagsResponse
         ]
     )
-
-
-articlePreview : Article -> Html msg
-articlePreview article =
-    let
-        authorImg =
-            if not (String.isEmpty article.author.image) then
-                img [ src article.author.image ] []
-            else
-                img [] []
-    in
-        div
-            [ class "article-preview" ]
-            [ div [ class "article-meta" ]
-                [ a [ href ("#/profile/" ++ article.author.username) ]
-                    [ authorImg ]
-                , div [ class "info" ]
-                    [ a [ class "author", href ("#/profile/" ++ article.author.username) ] [ text article.author.username ]
-                    , span [ class "date" ]
-                        [ text (formatDate article.createdAt) ]
-                    ]
-                , div [ class "pull-xs-right" ]
-                    [ button [ class "btn btn-sm btn-outline-primary" ]
-                        [ i [ class "ion-heart" ] []
-                        , text (" " ++ toString article.favoritesCount)
-                        ]
-                    ]
-                ]
-            , a [ class "preview-link", href ("/#/article/" ++ article.slug) ]
-                [ h1 [] [ text article.title ]
-                , p [] [ text article.description ]
-                , span [] [ text "Read more..." ]
-                , ul [ class "tag-list" ]
-                    (List.map
-                        (\tag -> (li [ class "tag-default tag-pill tag-outline" ] [ text tag ]))
-                        article.tagList
-                    )
-                ]
-            ]
-
-
-articleList : WebData Articles -> Html msg
-articleList articles =
-    case articles of
-        RemoteData.NotAsked ->
-            text ""
-
-        RemoteData.Loading ->
-            div [ class "article-preview" ] [ text "Loading articles..." ]
-
-        RemoteData.Success articles ->
-            if List.length articles.articles == 0 then
-                div [ class "article-preview" ]
-                    [ text "No articles here... yet." ]
-            else
-                div [] (articles.articles |> List.map articlePreview)
-
-        RemoteData.Failure error ->
-            text (toString error)
 
 
 tagList : WebData Tags -> List (Html Msg)
@@ -182,7 +123,7 @@ view session model =
             [ div [ class "row" ]
                 [ div [ class "col-md-9" ]
                     [ div [ class "feed-toggle" ] [ viewFeeds session model ]
-                    , articleList model.articles
+                    , viewArticleList model.articles
                     ]
                 , div [ class "col-md-3" ]
                     [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
@@ -205,7 +146,7 @@ update msg model session =
         FetchArticles ->
             ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
             , Cmd.batch
-                [ fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+                [ fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
                 , fetchTags |> Cmd.map FetchTagsResponse
                 ]
             )
@@ -219,12 +160,12 @@ update msg model session =
 
                 Global ->
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchArticles 0 Nothing |> Cmd.map FetchArticlesResponse
+                    , fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
                     )
 
                 Tagged tag ->
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchArticles 0 (Just tag) |> Cmd.map FetchArticlesResponse
+                    , fetchArticles 0 10 (Just tag) |> Cmd.map FetchArticlesResponse
                     )
 
         FetchArticlesResponse response ->
