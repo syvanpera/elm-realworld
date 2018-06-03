@@ -1,13 +1,14 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# Distribution
+build/
 
-# dependencies
-/node_modules
-/elm-stuff
+# elm-package generated files
+elm-stuff
 
-#System Files
+# elm-repl generated files
+repl-temp-*
+
+# Dependency directories
+node_modules
+
+# Desktop Services Store on macOS
 .DS_Store
-Thumbs.db
-
-# Build artifacts
-elm.js
-/TAGS
