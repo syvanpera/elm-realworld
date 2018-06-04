@@ -1,12 +1,13 @@
 module Page.Home exposing (Model, Msg, initialModel, init, view, update)
 
-import Html exposing (Html, div, text, button, a, ul, li, img, span, i, h1, p)
-import Html.Attributes exposing (class, href, src, hidden)
+import Html exposing (Html, div, text, a, ul, li, i, p)
+import Html.Attributes exposing (class, href, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article, Tags, Tag, Session)
+import Model exposing (Articles, Tags, Tag, Session)
 import Api exposing (fetchArticles, fetchTags, fetchFeed)
-import Util exposing (formatDate, isLoggedIn, viewArticleList)
+import Util exposing (isLoggedIn)
+import Views.Feed exposing (viewFeed)
 import Banner
 import Debug
 
@@ -25,9 +26,7 @@ type Feed
 
 
 type Msg
-    = NoOp
-    | FetchArticles
-    | ActiveFeed Feed
+    = ActiveFeed Feed
     | FetchArticlesResponse (WebData Articles)
     | FetchTagsResponse (WebData Tags)
 
@@ -57,7 +56,16 @@ tagList tagsData =
             [ text "Loading tags..." ]
 
         RemoteData.Success tags ->
-            tags.tags |> List.map (\tag -> a [ href "javascript:void(0)", class "tag-pill tag-default", onClick (ActiveFeed (Tagged tag)) ] [ text tag ])
+            tags.tags
+                |> List.map
+                    (\tag ->
+                        a
+                            [ href "javascript:void(0)"
+                            , class "tag-pill tag-default"
+                            , onClick (ActiveFeed (Tagged tag))
+                            ]
+                            [ text tag ]
+                    )
 
         RemoteData.Failure _ ->
             [ text "" ]
@@ -123,7 +131,7 @@ view session model =
             [ div [ class "row" ]
                 [ div [ class "col-md-9" ]
                     [ div [ class "feed-toggle" ] [ viewFeeds session model ]
-                    , viewArticleList model.articles
+                    , viewFeed model.articles
                     ]
                 , div [ class "col-md-3" ]
                     [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
@@ -140,17 +148,6 @@ view session model =
 update : Msg -> Model -> Maybe Session -> ( Model, Cmd Msg )
 update msg model session =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
-        FetchArticles ->
-            ( { model | articles = RemoteData.Loading, tags = RemoteData.Loading }
-            , Cmd.batch
-                [ fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
-                , fetchTags |> Cmd.map FetchTagsResponse
-                ]
-            )
-
         ActiveFeed feed ->
             case feed of
                 Personal ->

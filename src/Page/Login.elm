@@ -3,7 +3,6 @@ module Page.Login exposing (Model, Msg, initialModel, view, update)
 import Html exposing (Html, div, h1, p, form, fieldset, input, button, text, a, ul, li)
 import Html.Attributes exposing (class, placeholder, type_, href, value, hidden)
 import Html.Events exposing (onInput, onSubmit)
-import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Http
 import Model exposing (User, Session)
 import Api exposing (loginUser)
@@ -19,8 +18,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | EmailInput String
+    = EmailInput String
     | PasswordInput String
     | Login
     | LoginResponse (Result Http.Error User)
@@ -43,7 +41,7 @@ view model =
                         [ a [ href "#/register" ]
                             [ text "Need an account?" ]
                         ]
-                    , ul [ class "error-messages", hidden (List.isEmpty (model.errors)) ]
+                    , ul [ class "error-messages", hidden (List.isEmpty model.errors) ]
                         (List.map
                             (\error -> li [] [ text error ])
                             model.errors
@@ -69,9 +67,6 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         EmailInput email ->
             ( { model | email = email }, Cmd.none )
 

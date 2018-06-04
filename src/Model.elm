@@ -62,8 +62,7 @@ type alias Comment =
 
 
 type alias Comments =
-    { comments : List Comment
-    }
+    { comments : List Comment }
 
 
 type alias User =

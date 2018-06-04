@@ -1,11 +1,10 @@
 module Api exposing (fetchArticles, fetchUserArticles, fetchFavoriteArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, fetchProfile, loginUser, registerUser)
 
 import Http
-import Json.Decode as Decode exposing (at, nullable)
+import Json.Decode as Decode
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (decode, required, optional, requiredAt, optionalAt)
 import Json.Encode as Encode
-import Json.Encode.Extra as EncodeExtra
 import HttpBuilder exposing (RequestBuilder, withExpect, withHeader, toRequest)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Article, Comments, Comment, Slug, Profile, Tags, Tag, User, Session)
@@ -27,17 +26,17 @@ fetchArticlesUrl offset limit tag =
                 Nothing ->
                     ""
     in
-        baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ tagParam
+        baseApiUrl ++ "articles?limit=" ++ toString limit ++ "&offset=" ++ toString offset ++ tagParam
 
 
 fetchUserArticlesUrl : Int -> Int -> String -> String
 fetchUserArticlesUrl offset limit username =
-    baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ "&author=" ++ username
+    baseApiUrl ++ "articles?limit=" ++ toString limit ++ "&offset=" ++ toString offset ++ "&author=" ++ username
 
 
 fetchFavoriteArticlesUrl : Int -> Int -> String -> String
 fetchFavoriteArticlesUrl offset limit username =
-    baseApiUrl ++ "articles?limit=" ++ (toString limit) ++ "&offset=" ++ (toString offset) ++ "&favorited=" ++ username
+    baseApiUrl ++ "articles?limit=" ++ toString limit ++ "&offset=" ++ toString offset ++ "&favorited=" ++ username
 
 
 fetchTagsUrl : String
@@ -57,7 +56,7 @@ fetchCommentsUrl slug =
 
 fetchFeedUrl : Int -> String
 fetchFeedUrl offset =
-    baseApiUrl ++ "articles/feed?limit=10&offset=" ++ (toString offset)
+    baseApiUrl ++ "articles/feed?limit=10&offset=" ++ toString offset
 
 
 fetchProfileUrl : String -> String
@@ -76,8 +75,8 @@ loginUrl =
 
 
 withAuthorization : Maybe Session -> RequestBuilder a -> RequestBuilder a
-withAuthorization session builder =
-    case session of
+withAuthorization maybeSession builder =
+    case maybeSession of
         Just session ->
             builder
                 |> withHeader "authorization" ("Token " ++ session.token)
@@ -266,14 +265,3 @@ userDecoder =
         |> requiredAt [ "user", "updatedAt" ] Json.Decode.Extra.date
         |> requiredAt [ "user", "bio" ] (Decode.nullable Decode.string)
         |> requiredAt [ "user", "image" ] (Decode.nullable Decode.string)
-
-
-userEncoder : User -> Encode.Value
-userEncoder user =
-    Encode.object
-        [ ( "email", Encode.string user.email )
-        , ( "token", Encode.string user.token )
-        , ( "username", Encode.string user.username )
-        , ( "bio", EncodeExtra.maybe Encode.string user.bio )
-        , ( "image", EncodeExtra.maybe Encode.string user.image )
-        ]

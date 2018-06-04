@@ -7,8 +7,8 @@ import Debug
 
 
 navigation : Maybe Session -> List (Html msg)
-navigation session =
-    case session of
+navigation maybeSession =
+    case maybeSession of
         Just session ->
             [ li [ class "nav-item" ]
                 [ a [ class "nav-link", href "" ] [ i [ class "ion-compose" ] [], text " New Article" ] ]
@@ -33,10 +33,9 @@ view session =
             [ a [ href "#/", class "navbar-brand" ]
                 [ text "conduit" ]
             , ul [ class "nav navbar-nav pull-xs-right" ]
-                ([ li [ class "nav-item" ]
+                (li [ class "nav-item" ]
                     [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
-                 ]
-                    ++ (navigation session)
+                    :: navigation session
                 )
             ]
         ]

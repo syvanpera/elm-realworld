@@ -1,12 +1,12 @@
 module Page.Profile exposing (Model, Msg, initialModel, init, view, update)
 
-import Html exposing (Html, div, text, p, img, h1, h4, button, ul, li, a, i, span)
+import Html exposing (Html, div, text, p, img, h4, button, ul, li, a, i)
 import Html.Attributes exposing (class, src, href)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Profile, Articles, Article)
-import Api exposing (fetchProfile, fetchArticles, fetchUserArticles, fetchFavoriteArticles)
-import Util exposing (viewArticleList)
+import Model exposing (Profile, Articles)
+import Api exposing (fetchProfile, fetchUserArticles, fetchFavoriteArticles)
+import Views.Feed exposing (viewFeed)
 
 
 type alias Model =
@@ -22,8 +22,7 @@ type Feed
 
 
 type Msg
-    = NoOp
-    | ActiveFeed Feed
+    = ActiveFeed Feed
     | FetchProfileResponse (WebData Profile)
     | FetchArticlesResponse (WebData Articles)
 
@@ -44,8 +43,8 @@ init username =
 
 
 viewProfileInfo : WebData Profile -> Html Msg
-viewProfileInfo profile =
-    case profile of
+viewProfileInfo profileData =
+    case profileData of
         RemoteData.Success profile ->
             div [ class "user-info" ]
                 [ div [ class "container" ]
@@ -109,7 +108,7 @@ view model =
                                 ]
                             ]
                         ]
-                    , viewArticleList model.articles
+                    , viewFeed model.articles
                     ]
                 ]
             ]
@@ -119,9 +118,6 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         ActiveFeed feed ->
             case feed of
                 Personal ->

@@ -1,10 +1,11 @@
 module Page.Article exposing (Model, Msg, initialModel, init, view, update)
 
-import Html exposing (Html, div, text, h2, a, button, hr, p, i, span, img, form, textarea, ul, li)
-import Html.Attributes exposing (class, href, src, id, placeholder, attribute, hidden)
+import Html exposing (Html, div, text, a, button, hr, p, span, img, form, textarea, ul, li)
+import Html.Attributes exposing (class, href, src, placeholder, attribute, hidden)
 import RemoteData exposing (WebData)
 import Markdown
 import Model exposing (Article, Comments, Comment, Slug, Session)
+import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
 import Api exposing (fetchArticle, fetchComments)
 import Util exposing (formatDate)
 import Banner
@@ -17,8 +18,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | FetchArticleResponse (WebData Article)
+    = FetchArticleResponse (WebData Article)
     | FetchCommentsResponse (WebData Comments)
 
 
@@ -78,7 +78,7 @@ viewCommentCard comment =
 
 
 viewArticle : Maybe Session -> Article -> WebData Comments -> Html msg
-viewArticle session article comments =
+viewArticle session article commentsData =
     div [ class "container page" ]
         [ div [ class "row article-content" ]
             [ div [ class "col-md-12" ]
@@ -95,32 +95,11 @@ viewArticle session article comments =
         , hr []
             []
         , div [ class "article-actions" ]
-            [ div [ class "article-meta" ]
-                [ a [ href ("#/@" ++ article.author.username) ]
-                    [ img [ src article.author.image ] [] ]
-                , div [ class "info" ]
-                    [ a [ class "author", href ("#/@" ++ article.author.username) ]
-                        [ text article.author.username ]
-                    , span [ class "date" ]
-                        [ text (formatDate article.createdAt) ]
-                    ]
-                , button [ class "btn btn-sm btn-outline-secondary" ]
-                    [ i [ class "ion-plus-round" ] []
-                    , text (" Follow " ++ article.author.username ++ " ")
-                    ]
-                , text " "
-                , button [ class "btn btn-sm btn-outline-primary" ]
-                    [ i [ class "ion-heart" ] []
-                    , text " Favorite Article "
-                    , span [ class "counter" ]
-                        [ text ("(" ++ (toString article.favoritesCount) ++ ")") ]
-                    ]
-                ]
-            ]
+            [ viewArticleMeta ArticleView.Default article ]
         , div [ class "row" ]
             [ div [ class "col-xs-12 col-md-8 offset-md-2" ]
                 (viewCommentForm session
-                    :: (case comments of
+                    :: (case commentsData of
                             RemoteData.Success comments ->
                                 List.map viewCommentCard comments.comments
 
@@ -149,9 +128,6 @@ view model session =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         FetchArticleResponse response ->
             ( { model | article = response }, Cmd.none )
 

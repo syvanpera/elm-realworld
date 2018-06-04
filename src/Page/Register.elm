@@ -19,8 +19,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | UsernameInput String
+    = UsernameInput String
     | EmailInput String
     | PasswordInput String
     | Register
@@ -44,7 +43,7 @@ view model =
                         [ a [ href "#/login" ]
                             [ text "Have an account?" ]
                         ]
-                    , ul [ class "error-messages", hidden (List.isEmpty (model.errors)) ]
+                    , ul [ class "error-messages", hidden (List.isEmpty model.errors) ]
                         (List.map
                             (\error -> li [] [ text error ])
                             model.errors
@@ -74,9 +73,6 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         UsernameInput username ->
             ( { model | username = username }, Cmd.none )
 

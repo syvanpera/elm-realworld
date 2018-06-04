@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
 import Navigation exposing (Location)
 import Model exposing (Session)
 import Routing exposing (Route(..), parseLocation)
@@ -27,8 +27,7 @@ type alias Model =
 
 
 type Msg
-    = NoOp
-    | SetRoute Location
+    = SetRoute Location
     | HomeMsg Home.Msg
     | ArticleMsg Article.Msg
     | ProfileMsg Profile.Msg
@@ -132,9 +131,6 @@ setRoute location model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
-
         SetRoute location ->
             setRoute location model
 
