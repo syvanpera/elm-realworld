@@ -56,7 +56,14 @@ viewProfileInfo profileData =
                                 [ text profile.bio ]
                             , button [ class "btn btn-sm btn-outline-secondary action-btn" ]
                                 [ i [ class "ion-plus-round" ] []
-                                , text (" Follow " ++ profile.username)
+                                , text
+                                    ((if profile.following then
+                                        " Unfollow "
+                                      else
+                                        " Follow "
+                                     )
+                                        ++ profile.username
+                                    )
                                 ]
                             ]
                         ]
