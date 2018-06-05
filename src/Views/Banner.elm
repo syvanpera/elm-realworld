@@ -1,9 +1,10 @@
-module Banner exposing (view)
+module Views.Banner exposing (view)
 
 import Html exposing (Html, div, text, h1, p)
 import Html.Attributes exposing (class)
-import Model exposing (Article)
+import Model exposing (Article, Session)
 import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
+import Util exposing (validSession)
 
 
 viewArticle : Article -> Html msg
@@ -15,10 +16,9 @@ viewArticle article =
 
 
 view : Maybe Article -> Html msg
-view maybeArticle =
-    div
-        [ class "banner" ]
-        [ case maybeArticle of
+view article =
+    div [ class "banner" ]
+        [ case article of
             Just article ->
                 viewArticle article
 

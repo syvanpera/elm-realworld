@@ -5,24 +5,19 @@ import Navigation exposing (Location)
 import Model exposing (Session)
 import Routing exposing (Route(..), parseLocation)
 import Ports
-import Header
-import Footer
 import Page.Home as Home
 import Page.Article as Article
 import Page.Profile as Profile
 import Page.Login as Login
 import Page.Register as Register
+import Views.Footer as Footer
+import Views.Header as Header
 
 
 type alias Model =
     { route : Route
     , session : Maybe Session
     , page : Page
-    , homeModel : Home.Model
-    , articleModel : Article.Model
-    , profileModel : Profile.Model
-    , loginModel : Login.Model
-    , registerModel : Register.Model
     }
 
 
@@ -37,23 +32,19 @@ type Msg
 
 
 type Page
-    = Home
-    | Article
-    | Profile
-    | Login
-    | Register
+    = Blank
+    | Home Home.Model
+    | Article Article.Model
+    | Profile Profile.Model
+    | Login Login.Model
+    | Register Register.Model
 
 
 initialModel : Model
 initialModel =
     { route = Routing.Home
     , session = Nothing
-    , page = Home
-    , homeModel = Home.initialModel
-    , articleModel = Article.initialModel
-    , profileModel = Profile.initialModel
-    , loginModel = Login.initialModel
-    , registerModel = Register.initialModel
+    , page = Blank
     }
 
 
@@ -66,28 +57,31 @@ view : Model -> Html Msg
 view model =
     div []
         [ Header.view model.session
-        , viewPage model
+        , viewPage model.session model.page
         , Footer.view
         ]
 
 
-viewPage : Model -> Html Msg
-viewPage model =
-    case model.page of
-        Home ->
-            Html.map HomeMsg (Home.view model.session model.homeModel)
+viewPage : Maybe Session -> Page -> Html Msg
+viewPage session page =
+    case page of
+        Blank ->
+            Html.text ""
 
-        Article ->
-            Html.map ArticleMsg (Article.view model.articleModel model.session)
+        Home subModel ->
+            Html.map HomeMsg (Home.view session subModel)
 
-        Profile ->
-            Html.map ProfileMsg (Profile.view model.profileModel)
+        Article subModel ->
+            Html.map ArticleMsg (Article.view session subModel)
 
-        Login ->
-            Html.map LoginMsg (Login.view model.loginModel)
+        Profile subModel ->
+            Html.map ProfileMsg (Profile.view subModel)
 
-        Register ->
-            Html.map RegisterMsg (Register.view model.registerModel)
+        Login subModel ->
+            Html.map LoginMsg (Login.view subModel)
+
+        Register subModel ->
+            Html.map RegisterMsg (Register.view subModel)
 
 
 setRoute : Location -> Model -> ( Model, Cmd Msg )
@@ -95,86 +89,72 @@ setRoute location model =
     let
         route =
             parseLocation location
+
+        initPage page route toMsg subInit =
+            let
+                ( pageModel, pageCmd ) =
+                    subInit model.session
+            in
+                ( { model | route = route, page = page pageModel }, Cmd.map toMsg pageCmd )
     in
         case route of
             Routing.Home ->
-                let
-                    ( pageModel, pageCmd ) =
-                        Home.init
-                in
-                    ( { model | route = route, page = Home, homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
+                initPage Home route HomeMsg Home.init
 
             Routing.Article slug ->
-                let
-                    ( pageModel, pageCmd ) =
-                        Article.init slug
-                in
-                    ( { model | route = route, page = Article, articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
+                initPage Article route ArticleMsg (Article.init slug)
 
             Routing.Profile username ->
-                let
-                    ( pageModel, pageCmd ) =
-                        Profile.init username
-                in
-                    ( { model | route = route, page = Profile, profileModel = pageModel }, Cmd.map ProfileMsg pageCmd )
+                initPage Profile route ProfileMsg (Profile.init username)
 
             Routing.Login ->
-                ( { model | route = route, page = Login }, Cmd.none )
+                initPage Login route LoginMsg Login.init
 
             Routing.Register ->
-                ( { model | route = route, page = Register }, Cmd.none )
+                initPage Register route RegisterMsg Register.init
 
             Routing.NotFound ->
-                ( { model | route = route, page = Home }, Cmd.none )
+                initPage Home route HomeMsg Home.init
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        SetRoute location ->
-            setRoute location model
-
-        HomeMsg subMsg ->
+    let
+        toPage page toMsg subUpdate subMsg subModel =
             let
-                ( pageModel, pageCmd ) =
-                    Home.update subMsg model.homeModel model.session
+                ( newModel, newCmd ) =
+                    subUpdate model.session subMsg subModel
             in
-                ( { model | homeModel = pageModel }, Cmd.map HomeMsg pageCmd )
+                ( { model | page = page newModel }, Cmd.map toMsg newCmd )
+    in
+        case ( msg, model.page ) of
+            ( SetRoute route, _ ) ->
+                setRoute route model
 
-        ArticleMsg subMsg ->
-            let
-                ( pageModel, pageCmd ) =
-                    Article.update subMsg model.articleModel
-            in
-                ( { model | articleModel = pageModel }, Cmd.map ArticleMsg pageCmd )
+            ( HomeMsg subMsg, Home subModel ) ->
+                toPage Home HomeMsg Home.update subMsg subModel
 
-        ProfileMsg subMsg ->
-            let
-                ( pageModel, pageCmd ) =
-                    Profile.update subMsg model.profileModel
-            in
-                ( { model | profileModel = pageModel }, Cmd.map ProfileMsg pageCmd )
+            ( ArticleMsg subMsg, Article subModel ) ->
+                toPage Article ArticleMsg Article.update subMsg subModel
 
-        LoginMsg subMsg ->
-            let
-                ( pageModel, pageCmd ) =
-                    Login.update subMsg model.loginModel
-            in
-                ( { model | loginModel = pageModel }, Cmd.map LoginMsg pageCmd )
+            ( ProfileMsg subMsg, Profile subModel ) ->
+                toPage Profile ProfileMsg Profile.update subMsg subModel
 
-        RegisterMsg subMsg ->
-            let
-                ( pageModel, pageCmd ) =
-                    Register.update subMsg model.registerModel
-            in
-                ( { model | registerModel = pageModel }, Cmd.map RegisterMsg pageCmd )
+            ( LoginMsg subMsg, Login subModel ) ->
+                toPage Login LoginMsg Login.update subMsg subModel
 
-        SessionChanged session ->
-            let
-                _ =
-                    Debug.log "session changed" session
-            in
-                ( { model | session = Just session }, Cmd.none )
+            ( RegisterMsg subMsg, Register subModel ) ->
+                toPage Register RegisterMsg Register.update subMsg subModel
+
+            ( SessionChanged session, _ ) ->
+                let
+                    _ =
+                        Debug.log "session changed" session
+                in
+                    ( { model | session = Just session }, Cmd.none )
+
+            ( _, _ ) ->
+                ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg

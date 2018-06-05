@@ -1,4 +1,4 @@
-module Page.Article exposing (Model, Msg, initialModel, init, view, update)
+module Page.Article exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, text, a, button, hr, p, span, img, form, textarea, ul, li)
 import Html.Attributes exposing (class, href, src, placeholder, attribute, hidden)
@@ -8,7 +8,7 @@ import Model exposing (Article, Comments, Comment, Slug, Session)
 import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
 import Api exposing (fetchArticle, fetchComments)
 import Util exposing (formatDate)
-import Banner
+import Views.Banner as Banner
 
 
 type alias Model =
@@ -27,8 +27,8 @@ initialModel =
     Model RemoteData.NotAsked RemoteData.NotAsked
 
 
-init : Slug -> ( Model, Cmd Msg )
-init slug =
+init : Slug -> Maybe Session -> ( Model, Cmd Msg )
+init slug _ =
     ( { initialModel | article = RemoteData.Loading, comments = RemoteData.Loading }
     , Cmd.batch
         [ fetchArticle slug |> Cmd.map FetchArticleResponse
@@ -111,8 +111,8 @@ viewArticle session article commentsData =
         ]
 
 
-view : Model -> Maybe Session -> Html Msg
-view model session =
+view : Maybe Session -> Model -> Html Msg
+view session model =
     div [ class "article-page" ]
         (case model.article of
             RemoteData.Success article ->
@@ -125,8 +125,8 @@ view model session =
         )
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
+update _ msg model =
     case msg of
         FetchArticleResponse response ->
             ( { model | article = response }, Cmd.none )

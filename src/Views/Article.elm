@@ -4,6 +4,7 @@ import Html exposing (Html, div, text, button, a, img, span, i)
 import Html.Attributes exposing (class, href, src)
 import Model exposing (Article)
 import Util exposing (formatDate)
+import Views.Profile exposing (viewFollowButton)
 
 
 type ViewType
@@ -11,31 +12,26 @@ type ViewType
     | Compact
 
 
-viewDefault : Article -> List (Html msg)
-viewDefault article =
-    [ button [ class "btn btn-sm btn-outline-secondary" ]
-        [ i [ class "ion-plus-round" ] []
-        , text (" Follow " ++ article.author.username ++ " ")
-        ]
-    , text " "
-    , button [ class "btn btn-sm btn-outline-primary" ]
-        [ i [ class "ion-heart" ] []
-        , text " Favorite Article "
-        , span [ class "counter" ]
-            [ text ("(" ++ toString article.favoritesCount ++ ")") ]
-        ]
-    ]
-
-
-viewCompact : Article -> List (Html msg)
-viewCompact article =
-    [ div [ class "pull-xs-right" ]
-        [ button [ class "btn btn-sm btn-outline-primary" ]
-            [ i [ class "ion-heart" ] []
-            , text (" " ++ toString article.favoritesCount)
+viewProfileActions : ViewType -> Article -> List (Html msg)
+viewProfileActions viewType article =
+    if viewType == Compact then
+        [ div [ class "pull-xs-right" ]
+            [ button [ class "btn btn-sm btn-outline-primary" ]
+                [ i [ class "ion-heart" ] []
+                , text (" " ++ toString article.favoritesCount)
+                ]
             ]
         ]
-    ]
+    else
+        [ viewFollowButton article.author
+        , text " "
+        , button [ class "btn btn-sm btn-outline-primary" ]
+            [ i [ class "ion-heart" ] []
+            , text " Favorite Article "
+            , span [ class "counter" ]
+                [ text ("(" ++ toString article.favoritesCount ++ ")") ]
+            ]
+        ]
 
 
 viewArticleMeta : ViewType -> Article -> Html msg
@@ -46,12 +42,6 @@ viewArticleMeta viewType article =
                 img [ src article.author.image ] []
             else
                 img [] []
-
-        opView =
-            if viewType == Compact then
-                viewCompact
-            else
-                viewDefault
     in
         div [ class "article-meta" ]
             (List.append
@@ -64,5 +54,5 @@ viewArticleMeta viewType article =
                         [ text (formatDate article.createdAt) ]
                     ]
                 ]
-                (opView article)
+                (viewProfileActions viewType article)
             )

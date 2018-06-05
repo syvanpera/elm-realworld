@@ -1,4 +1,4 @@
-module Page.Register exposing (Model, Msg, initialModel, view, update)
+module Page.Register exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, h1, p, form, fieldset, input, button, text, a, ul, li)
 import Html.Attributes exposing (class, placeholder, type_, href, value, hidden)
@@ -29,6 +29,11 @@ type Msg
 initialModel : Model
 initialModel =
     Model "" "" "" []
+
+
+init : Maybe Session -> ( Model, Cmd Msg )
+init _ =
+    ( initialModel, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -70,8 +75,8 @@ view model =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
+update _ msg model =
     case msg of
         UsernameInput username ->
             ( { model | username = username }, Cmd.none )

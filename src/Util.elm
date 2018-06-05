@@ -1,4 +1,4 @@
-module Util exposing (formatDate, isLoggedIn)
+module Util exposing (formatDate, validSession)
 
 import Date exposing (Date)
 import Date.Format
@@ -10,8 +10,8 @@ formatDate date =
     Date.Format.format "%B %e, %Y" date
 
 
-isLoggedIn : Maybe Session -> Bool
-isLoggedIn session =
+validSession : Maybe Session -> Bool
+validSession session =
     case session of
         Just _ ->
             True

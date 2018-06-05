@@ -1,4 +1,4 @@
-module Footer exposing (view)
+module Views.Footer exposing (view)
 
 import Html exposing (Html, footer, div, a, text, span)
 import Html.Attributes exposing (class, href)

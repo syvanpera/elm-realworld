@@ -1,4 +1,18 @@
-module Api exposing (fetchArticles, fetchUserArticles, fetchFavoriteArticles, fetchTags, fetchArticle, fetchComments, fetchFeed, fetchProfile, loginUser, registerUser)
+module Api
+    exposing
+        ( fetchArticles
+        , fetchUserArticles
+        , fetchFavoriteArticles
+        , fetchTags
+        , fetchArticle
+        , fetchComments
+        , fetchFeed
+        , fetchProfile
+        , loginUser
+        , registerUser
+        , favoriteArticle
+        , followUser
+        )
 
 import Http
 import Json.Decode as Decode
@@ -62,6 +76,16 @@ fetchFeedUrl offset =
 fetchProfileUrl : String -> String
 fetchProfileUrl username =
     baseApiUrl ++ "profiles/" ++ username
+
+
+favoriteArticleUrl : String -> String
+favoriteArticleUrl slug =
+    baseApiUrl ++ "articles/" ++ slug ++ "/favorite"
+
+
+followUserUrl : String -> String
+followUserUrl username =
+    baseApiUrl ++ "profiles/" ++ username ++ "/follow"
 
 
 registerUrl : String
@@ -136,10 +160,23 @@ fetchFeed offset session =
         |> RemoteData.sendRequest
 
 
-fetchProfile : String -> Cmd (WebData Profile)
-fetchProfile username =
-    Http.get (fetchProfileUrl username) nestedProfileDecoder
+fetchProfile : String -> Maybe Session -> Cmd (WebData Profile)
+fetchProfile username session =
+    HttpBuilder.get (fetchProfileUrl username)
+        |> withExpect (Http.expectJson nestedProfileDecoder)
+        |> withAuthorization session
+        |> toRequest
         |> RemoteData.sendRequest
+
+
+favoriteArticle : String -> Http.Request Article
+favoriteArticle slug =
+    Http.post (favoriteArticleUrl slug) Http.emptyBody articleDecoder
+
+
+followUser : String -> Http.Request User
+followUser username =
+    Http.post (followUserUrl username) Http.emptyBody userDecoder
 
 
 loginUser : String -> String -> Http.Request User

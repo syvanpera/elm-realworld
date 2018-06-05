@@ -1,4 +1,4 @@
-module Page.Home exposing (Model, Msg, initialModel, init, view, update)
+module Page.Home exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, text, a, ul, li, i, p)
 import Html.Attributes exposing (class, href, hidden)
@@ -6,9 +6,9 @@ import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Tags, Tag, Session)
 import Api exposing (fetchArticles, fetchTags, fetchFeed)
-import Util exposing (isLoggedIn)
+import Util exposing (validSession)
 import Views.Feed exposing (viewFeed)
-import Banner
+import Views.Banner as Banner
 import Debug
 
 
@@ -36,8 +36,8 @@ initialModel =
     Model RemoteData.NotAsked RemoteData.NotAsked Global
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Maybe Session -> ( Model, Cmd Msg )
+init _ =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
         [ fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
@@ -83,7 +83,7 @@ viewFeeds session model =
                     ""
     in
         ul [ class "nav nav-pills outline-active" ]
-            [ li [ class "nav-item", hidden (not <| isLoggedIn session) ]
+            [ li [ class "nav-item", hidden (not <| validSession session) ]
                 [ a
                     [ href "javascript:void(0)"
                     , class
@@ -124,29 +124,36 @@ viewFeeds session model =
 
 view : Maybe Session -> Model -> Html Msg
 view session model =
-    div [ class "home-page" ]
-        [ Banner.view Nothing
-        , div
-            [ class "container page" ]
-            [ div [ class "row" ]
-                [ div [ class "col-md-9" ]
-                    [ div [ class "feed-toggle" ] [ viewFeeds session model ]
-                    , viewFeed model.articles
-                    ]
-                , div [ class "col-md-3" ]
-                    [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
-                        [ p [ hidden (model.tags == RemoteData.Loading) ] [ text "Popular Tags" ]
-                        , div [ class "tag-list" ]
-                            (tagList model.tags)
+    let
+        banner =
+            if validSession session then
+                text ""
+            else
+                Banner.view Nothing
+    in
+        div [ class "home-page" ]
+            [ banner
+            , div
+                [ class "container page" ]
+                [ div [ class "row" ]
+                    [ div [ class "col-md-9" ]
+                        [ div [ class "feed-toggle" ] [ viewFeeds session model ]
+                        , viewFeed model.articles
+                        ]
+                    , div [ class "col-md-3" ]
+                        [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
+                            [ p [ hidden (model.tags == RemoteData.Loading) ] [ text "Popular Tags" ]
+                            , div [ class "tag-list" ]
+                                (tagList model.tags)
+                            ]
                         ]
                     ]
                 ]
             ]
-        ]
 
 
-update : Msg -> Model -> Maybe Session -> ( Model, Cmd Msg )
-update msg model session =
+update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
+update session msg model =
     case msg of
         ActiveFeed feed ->
             case feed of

@@ -1,12 +1,13 @@
-module Page.Profile exposing (Model, Msg, initialModel, init, view, update)
+module Page.Profile exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, text, p, img, h4, button, ul, li, a, i)
 import Html.Attributes exposing (class, src, href)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Profile, Articles)
+import Model exposing (Profile, Articles, Session)
 import Api exposing (fetchProfile, fetchUserArticles, fetchFavoriteArticles)
 import Views.Feed exposing (viewFeed)
+import Views.Profile exposing (viewFollowButton)
 
 
 type alias Model =
@@ -32,11 +33,11 @@ initialModel =
     Model RemoteData.NotAsked RemoteData.NotAsked Personal
 
 
-init : String -> ( Model, Cmd Msg )
-init username =
+init : String -> Maybe Session -> ( Model, Cmd Msg )
+init username session =
     ( { initialModel | profile = RemoteData.Loading, articles = RemoteData.Loading }
     , Cmd.batch
-        [ fetchProfile username |> Cmd.map FetchProfileResponse
+        [ fetchProfile username session |> Cmd.map FetchProfileResponse
         , fetchUserArticles 0 5 username |> Cmd.map FetchArticlesResponse
         ]
     )
@@ -54,17 +55,7 @@ viewProfileInfo profileData =
                             , h4 [] [ text profile.username ]
                             , p []
                                 [ text profile.bio ]
-                            , button [ class "btn btn-sm btn-outline-secondary action-btn" ]
-                                [ i [ class "ion-plus-round" ] []
-                                , text
-                                    ((if profile.following then
-                                        " Unfollow "
-                                      else
-                                        " Follow "
-                                     )
-                                        ++ profile.username
-                                    )
-                                ]
+                            , viewFollowButton profile
                             ]
                         ]
                     ]
@@ -122,8 +113,8 @@ view model =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
+update _ msg model =
     case msg of
         ActiveFeed feed ->
             case feed of

@@ -1,4 +1,4 @@
-module Header exposing (view)
+module Views.Header exposing (view)
 
 import Html exposing (Html, nav, div, a, ul, li, i, text)
 import Html.Attributes exposing (class, href)
@@ -34,7 +34,7 @@ view session =
                 [ text "conduit" ]
             , ul [ class "nav navbar-nav pull-xs-right" ]
                 (li [ class "nav-item" ]
-                    [ a [ class "nav-link active", href "#/" ] [ text "Home" ] ]
+                    [ a [ class "nav-link", href "#/" ] [ text "Home" ] ]
                     :: navigation session
                 )
             ]
