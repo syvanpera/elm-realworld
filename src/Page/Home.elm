@@ -43,7 +43,7 @@ init : Maybe Session -> ( Model, Cmd Msg )
 init _ =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
+        [ fetchArticles 0 (articlesPerPage initialModel.activeFeed) Nothing |> Cmd.map FetchArticlesResponse
         , fetchTags |> Cmd.map FetchTagsResponse
         ]
     )
@@ -205,22 +205,25 @@ update session msg model =
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
                     , articles |> Cmd.map FetchArticlesResponse
                     )
+
+                articleLimit =
+                    articlesPerPage feed
             in
                 case feed of
                     Personal ->
-                        updateFeed (fetchFeed 0 session)
+                        updateFeed (fetchFeed 0 articleLimit session)
 
                     Global ->
-                        updateFeed (fetchArticles 0 10 Nothing)
+                        updateFeed (fetchArticles 0 articleLimit Nothing)
 
                     Tagged tag ->
-                        updateFeed (fetchArticles 0 10 (Just tag))
+                        updateFeed (fetchArticles 0 articleLimit (Just tag))
 
                     Favorite username ->
-                        updateFeed (fetchFavoriteArticles 0 10 username)
+                        updateFeed (fetchFavoriteArticles 0 articleLimit username)
 
                     Author username ->
-                        updateFeed (fetchFeed 0 session)
+                        updateFeed (fetchFeed 0 articleLimit session)
 
         FetchArticlesResponse response ->
             ( { model | articles = response }, Cmd.none )

@@ -68,9 +68,9 @@ fetchCommentsUrl slug =
     baseApiUrl ++ "articles/" ++ slug ++ "/comments"
 
 
-fetchFeedUrl : Int -> String
-fetchFeedUrl offset =
-    baseApiUrl ++ "articles/feed?limit=10&offset=" ++ toString offset
+fetchFeedUrl : Int -> Int -> String
+fetchFeedUrl offset limit =
+    baseApiUrl ++ "articles/feed?limit=" ++ toString limit ++ "&offset=" ++ toString offset
 
 
 fetchProfileUrl : String -> String
@@ -151,9 +151,9 @@ fetchTags =
         |> RemoteData.sendRequest
 
 
-fetchFeed : Int -> Maybe Session -> Cmd (WebData Articles)
-fetchFeed offset session =
-    HttpBuilder.get (fetchFeedUrl offset)
+fetchFeed : Int -> Int -> Maybe Session -> Cmd (WebData Articles)
+fetchFeed offset limit session =
+    HttpBuilder.get (fetchFeedUrl offset limit)
         |> withExpect (Http.expectJson articlesDecoder)
         |> withAuthorization session
         |> toRequest
