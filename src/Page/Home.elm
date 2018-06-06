@@ -5,7 +5,7 @@ import Html.Attributes exposing (class, href, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Tags, Tag, Session)
-import Api exposing (fetchArticles, fetchTags, fetchFeed)
+import Api exposing (fetchArticles, fetchFavoriteArticles, fetchTags, fetchFeed)
 import Util exposing (validSession)
 import Views.Feed exposing (viewFeed)
 import Views.Banner as Banner
@@ -15,18 +15,20 @@ import Debug
 type alias Model =
     { articles : WebData Articles
     , tags : WebData Tags
-    , activeFeed : Feed
+    , activeFeed : FeedSource
     }
 
 
-type Feed
+type FeedSource
     = Global
     | Personal
     | Tagged Tag
+    | Favorite String
+    | Author String
 
 
 type Msg
-    = ActiveFeed Feed
+    = ActiveFeed FeedSource
     | FetchArticlesResponse (WebData Articles)
     | FetchTagsResponse (WebData Tags)
 
@@ -170,6 +172,16 @@ update session msg model =
                 Tagged tag ->
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
                     , fetchArticles 0 10 (Just tag) |> Cmd.map FetchArticlesResponse
+                    )
+
+                Favorite username ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchFavoriteArticles 0 10 username |> Cmd.map FetchArticlesResponse
+                    )
+
+                Author username ->
+                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
+                    , fetchFeed 0 session |> Cmd.map FetchArticlesResponse
                     )
 
         FetchArticlesResponse response ->
