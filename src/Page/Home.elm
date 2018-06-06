@@ -16,6 +16,7 @@ type alias Model =
     { articles : WebData Articles
     , tags : WebData Tags
     , activeFeed : FeedSource
+    , currentPage : Int
     }
 
 
@@ -35,7 +36,7 @@ type Msg
 
 initialModel : Model
 initialModel =
-    Model RemoteData.NotAsked RemoteData.NotAsked Global
+    Model RemoteData.NotAsked RemoteData.NotAsked Global 1
 
 
 init : Maybe Session -> ( Model, Cmd Msg )
@@ -46,6 +47,25 @@ init _ =
         , fetchTags |> Cmd.map FetchTagsResponse
         ]
     )
+
+
+articlesPerPage : FeedSource -> Int
+articlesPerPage feedSource =
+    case feedSource of
+        Global ->
+            10
+
+        Personal ->
+            10
+
+        Tagged _ ->
+            10
+
+        Favorite _ ->
+            5
+
+        Author _ ->
+            5
 
 
 tagList : WebData Tags -> List (Html Msg)
@@ -124,6 +144,27 @@ viewFeeds session model =
             ]
 
 
+pagination : FeedSource -> Int -> WebData Articles -> Html msg
+pagination activeFeed currentPage articles =
+    case articles of
+        RemoteData.Success articles ->
+            let
+                pages =
+                    articles.articlesCount // articlesPerPage activeFeed
+
+                pageLink page isActive =
+                    li [ classList [ ( "page-item", True ), ( "active", isActive ) ] ]
+                        [ a [ class "page-link", href "" ] [ text (toString page) ]
+                        ]
+            in
+                List.range 1 pages
+                    |> List.map (\page -> pageLink page (page == currentPage))
+                    |> ul [ class "pagination" ]
+
+        _ ->
+            text ""
+
+
 view : Maybe Session -> Model -> Html Msg
 view session model =
     let
@@ -141,6 +182,7 @@ view session model =
                     [ div [ class "col-md-9" ]
                         [ div [ class "feed-toggle" ] [ viewFeeds session model ]
                         , viewFeed model.articles
+                        , pagination model.activeFeed model.currentPage model.articles
                         ]
                     , div [ class "col-md-3" ]
                         [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
