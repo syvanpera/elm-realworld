@@ -117,16 +117,18 @@ update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
 update _ msg model =
     case ( msg, model.profile ) of
         ( ActiveFeed feed, RemoteData.Success profile ) ->
-            case feed of
-                Personal ->
+            let
+                updateFeed articles =
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchUserArticles 0 5 profile.username |> Cmd.map FetchArticlesResponse
+                    , articles |> Cmd.map FetchArticlesResponse
                     )
+            in
+                case feed of
+                    Personal ->
+                        updateFeed (fetchUserArticles 0 5 profile.username)
 
-                Favorite ->
-                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchFavoriteArticles 0 5 profile.username |> Cmd.map FetchArticlesResponse
-                    )
+                    Favorite ->
+                        updateFeed (fetchFavoriteArticles 0 5 profile.username)
 
         ( FetchProfileResponse response, _ ) ->
             ( { model | profile = response }, Cmd.none )

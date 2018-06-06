@@ -48,11 +48,8 @@ view model =
                         [ a [ href "#/login" ]
                             [ text "Have an account?" ]
                         ]
-                    , ul [ class "error-messages", hidden (List.isEmpty model.errors) ]
-                        (List.map
-                            (\error -> li [] [ text error ])
-                            model.errors
-                        )
+                    , List.map (\error -> li [] [ text error ]) model.errors
+                        |> ul [ class "error-messages", hidden (List.isEmpty model.errors) ]
                     , form [ onSubmit Register ]
                         [ fieldset [ class "form-group" ]
                             [ input [ class "form-control form-control-lg", placeholder "Username", type_ "text", value model.username, onInput UsernameInput ]

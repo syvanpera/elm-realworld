@@ -79,36 +79,35 @@ viewCommentCard comment =
 
 viewArticle : Maybe Session -> Article -> WebData Comments -> Html msg
 viewArticle session article commentsData =
-    div [ class "container page" ]
-        [ div [ class "row article-content" ]
-            [ div [ class "col-md-12" ]
-                [ Markdown.toHtml [] article.body
-                , ul [ class "tag-list", hidden (List.isEmpty article.tagList) ]
-                    (List.map
-                        (\tag ->
-                            li [ class "tag-default tag-pill tag-outline" ] [ text tag ]
-                        )
-                        article.tagList
+    let
+        tagListElement tag =
+            li [ class "tag-default tag-pill tag-outline" ] [ text tag ]
+    in
+        div [ class "container page" ]
+            [ div [ class "row article-content" ]
+                [ div [ class "col-md-12" ]
+                    [ Markdown.toHtml [] article.body
+                    , List.map tagListElement article.tagList
+                        |> ul [ class "tag-list", hidden (List.isEmpty article.tagList) ]
+                    ]
+                ]
+            , hr []
+                []
+            , div [ class "article-actions" ]
+                [ viewArticleMeta ArticleView.Default article ]
+            , div [ class "row" ]
+                [ div [ class "col-xs-12 col-md-8 offset-md-2" ]
+                    (viewCommentForm session
+                        :: (case commentsData of
+                                RemoteData.Success comments ->
+                                    List.map viewCommentCard comments.comments
+
+                                _ ->
+                                    []
+                           )
                     )
                 ]
             ]
-        , hr []
-            []
-        , div [ class "article-actions" ]
-            [ viewArticleMeta ArticleView.Default article ]
-        , div [ class "row" ]
-            [ div [ class "col-xs-12 col-md-8 offset-md-2" ]
-                (viewCommentForm session
-                    :: (case commentsData of
-                            RemoteData.Success comments ->
-                                List.map viewCommentCard comments.comments
-
-                            _ ->
-                                []
-                       )
-                )
-            ]
-        ]
 
 
 view : Maybe Session -> Model -> Html Msg

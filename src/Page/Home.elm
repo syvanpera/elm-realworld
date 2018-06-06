@@ -1,7 +1,7 @@
 module Page.Home exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, text, a, ul, li, i, p)
-import Html.Attributes exposing (class, href, hidden)
+import Html.Attributes exposing (class, classList, href, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Articles, Tags, Tag, Session)
@@ -158,31 +158,27 @@ update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
 update session msg model =
     case msg of
         ActiveFeed feed ->
-            case feed of
-                Personal ->
+            let
+                updateFeed articles =
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchFeed 0 session |> Cmd.map FetchArticlesResponse
+                    , articles |> Cmd.map FetchArticlesResponse
                     )
+            in
+                case feed of
+                    Personal ->
+                        updateFeed (fetchFeed 0 session)
 
-                Global ->
-                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchArticles 0 10 Nothing |> Cmd.map FetchArticlesResponse
-                    )
+                    Global ->
+                        updateFeed (fetchArticles 0 10 Nothing)
 
-                Tagged tag ->
-                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchArticles 0 10 (Just tag) |> Cmd.map FetchArticlesResponse
-                    )
+                    Tagged tag ->
+                        updateFeed (fetchArticles 0 10 (Just tag))
 
-                Favorite username ->
-                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchFavoriteArticles 0 10 username |> Cmd.map FetchArticlesResponse
-                    )
+                    Favorite username ->
+                        updateFeed (fetchFavoriteArticles 0 10 username)
 
-                Author username ->
-                    ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , fetchFeed 0 session |> Cmd.map FetchArticlesResponse
-                    )
+                    Author username ->
+                        updateFeed (fetchFeed 0 session)
 
         FetchArticlesResponse response ->
             ( { model | articles = response }, Cmd.none )
