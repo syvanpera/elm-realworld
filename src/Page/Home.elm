@@ -43,8 +43,10 @@ init : Maybe Session -> ( Model, Cmd Msg )
 init _ =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles 0 (articlesPerPage initialModel.activeFeed) Nothing |> Cmd.map FetchArticlesResponse
-        , fetchTags |> Cmd.map FetchTagsResponse
+        [ fetchArticles 0 (articlesPerPage initialModel.activeFeed) Nothing
+            |> Cmd.map FetchArticlesResponse
+        , fetchTags
+            |> Cmd.map FetchTagsResponse
         ]
     )
 
@@ -94,10 +96,10 @@ tagList tagsData =
 
 
 viewFeeds : Maybe Session -> Model -> Html Msg
-viewFeeds session model =
+viewFeeds session { activeFeed } =
     let
         activeFeedTag =
-            case model.activeFeed of
+            case activeFeed of
                 Tagged tag ->
                     tag
 
@@ -110,7 +112,7 @@ viewFeeds session model =
                     [ href "javascript:void(0)"
                     , class
                         ("nav-link"
-                            ++ (if model.activeFeed == Personal then
+                            ++ (if activeFeed == Personal then
                                     " active"
                                 else
                                     ""
@@ -125,7 +127,7 @@ viewFeeds session model =
                     [ href "javascript:void(0)"
                     , class
                         ("nav-link"
-                            ++ (if model.activeFeed == Global then
+                            ++ (if activeFeed == Global then
                                     " active"
                                 else
                                     ""
@@ -135,7 +137,7 @@ viewFeeds session model =
                     ]
                     [ text "Global Feed" ]
                 ]
-            , li [ class "nav-item", hidden (model.activeFeed == Global || model.activeFeed == Personal) ]
+            , li [ class "nav-item", hidden (activeFeed == Global || activeFeed == Personal) ]
                 [ a [ href "javascript:void(0)", class "nav-link active" ]
                     [ i [ class "ion-pound" ] []
                     , text (" " ++ activeFeedTag)
