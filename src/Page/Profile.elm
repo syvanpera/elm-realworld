@@ -4,28 +4,31 @@ import Html exposing (Html, div, text, p, img, h4, button, ul, li, a, i)
 import Html.Attributes exposing (class, classList, src, href)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Profile, Articles, Session)
-import Api exposing (fetchProfile, fetchUserArticles, fetchFavoriteArticles)
+import Api.Feed exposing (fetchUserFeed, fetchFavoriteFeed)
+import Api.Profile exposing (fetchProfile)
+import Data.Feed exposing (Feed)
+import Data.Profile exposing (Profile)
+import Data.Session exposing (Session)
 import Views.Feed exposing (viewFeed)
 import Views.Profile exposing (viewFollowButton)
 
 
 type alias Model =
     { profile : WebData Profile
-    , articles : WebData Articles
-    , activeFeed : Feed
+    , articles : WebData Feed
+    , activeFeed : FeedType
     }
 
 
-type Feed
+type FeedType
     = Personal
     | Favorite
 
 
 type Msg
-    = ActiveFeed Feed
+    = ActiveFeed FeedType
     | FetchProfileResponse (WebData Profile)
-    | FetchArticlesResponse (WebData Articles)
+    | FetchFeedResponse (WebData Feed)
 
 
 initialModel : Model
@@ -38,7 +41,7 @@ init username session =
     ( { initialModel | profile = RemoteData.Loading, articles = RemoteData.Loading }
     , Cmd.batch
         [ fetchProfile username session |> Cmd.map FetchProfileResponse
-        , fetchUserArticles 0 5 username |> Cmd.map FetchArticlesResponse
+        , fetchUserFeed 0 5 username |> Cmd.map FetchFeedResponse
         ]
     )
 
@@ -112,20 +115,20 @@ update _ msg model =
             let
                 updateFeed articles =
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , articles |> Cmd.map FetchArticlesResponse
+                    , articles |> Cmd.map FetchFeedResponse
                     )
             in
                 case feed of
                     Personal ->
-                        updateFeed (fetchUserArticles 0 5 profile.username)
+                        updateFeed (fetchUserFeed 0 5 profile.username)
 
                     Favorite ->
-                        updateFeed (fetchFavoriteArticles 0 5 profile.username)
+                        updateFeed (fetchFavoriteFeed 0 5 profile.username)
 
         ( FetchProfileResponse response, _ ) ->
             ( { model | profile = response }, Cmd.none )
 
-        ( FetchArticlesResponse response, _ ) ->
+        ( FetchFeedResponse response, _ ) ->
             ( { model | articles = response }, Cmd.none )
 
         _ ->

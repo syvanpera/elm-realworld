@@ -2,8 +2,8 @@ module Views.Article exposing (ViewType(..), viewArticleMeta)
 
 import Html exposing (Html, div, text, button, a, img, span, i)
 import Html.Attributes exposing (class, href, src)
-import Model exposing (Article)
 import Util exposing (formatDate)
+import Data.Article exposing (Article)
 import Views.Profile exposing (viewFollowButton)
 
 

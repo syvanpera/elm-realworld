@@ -4,16 +4,18 @@ import Html exposing (Html, div, text, a, ul, li, i, p)
 import Html.Attributes exposing (class, classList, href, hidden)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Tags, Tag, Session)
-import Api exposing (fetchArticles, fetchFavoriteArticles, fetchTags, fetchFeed)
 import Util exposing (validSession)
+import Api.Article exposing (fetchTags)
+import Api.Feed exposing (fetchFeed, fetchPrivateFeed, fetchFavoriteFeed)
+import Data.Article exposing (Tags, Tag)
+import Data.Feed exposing (Feed)
+import Data.Session exposing (Session)
 import Views.Feed exposing (viewFeed)
 import Views.Banner as Banner
-import Debug
 
 
 type alias Model =
-    { articles : WebData Articles
+    { articles : WebData Feed
     , tags : WebData Tags
     , activeFeed : FeedSource
     , currentPage : Int
@@ -30,7 +32,7 @@ type FeedSource
 
 type Msg
     = ActiveFeed FeedSource
-    | FetchArticlesResponse (WebData Articles)
+    | FetchFeedResponse (WebData Feed)
     | FetchTagsResponse (WebData Tags)
 
 
@@ -43,8 +45,8 @@ init : Maybe Session -> ( Model, Cmd Msg )
 init _ =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchArticles 0 (articlesPerPage initialModel.activeFeed) Nothing
-            |> Cmd.map FetchArticlesResponse
+        [ fetchFeed 0 (articlesPerPage initialModel.activeFeed) Nothing
+            |> Cmd.map FetchFeedResponse
         , fetchTags
             |> Cmd.map FetchTagsResponse
         ]
@@ -132,7 +134,7 @@ viewFeeds session { activeFeed } =
             ]
 
 
-pagination : FeedSource -> Int -> WebData Articles -> Html msg
+pagination : FeedSource -> Int -> WebData Feed -> Html msg
 pagination activeFeed currentPage articles =
     case articles of
         RemoteData.Success articles ->
@@ -191,7 +193,7 @@ update session msg model =
             let
                 updateFeed articles =
                     ( { model | activeFeed = feed, articles = RemoteData.Loading }
-                    , articles |> Cmd.map FetchArticlesResponse
+                    , articles |> Cmd.map FetchFeedResponse
                     )
 
                 articleLimit =
@@ -199,21 +201,21 @@ update session msg model =
             in
                 case feed of
                     Personal ->
-                        updateFeed (fetchFeed 0 articleLimit session)
+                        updateFeed (fetchPrivateFeed 0 articleLimit session)
 
                     Global ->
-                        updateFeed (fetchArticles 0 articleLimit Nothing)
+                        updateFeed (fetchFeed 0 articleLimit Nothing)
 
                     Tagged tag ->
-                        updateFeed (fetchArticles 0 articleLimit (Just tag))
+                        updateFeed (fetchFeed 0 articleLimit (Just tag))
 
                     Favorite username ->
-                        updateFeed (fetchFavoriteArticles 0 articleLimit username)
+                        updateFeed (fetchFavoriteFeed 0 articleLimit username)
 
                     Author username ->
-                        updateFeed (fetchFeed 0 articleLimit session)
+                        updateFeed (fetchPrivateFeed 0 articleLimit session)
 
-        FetchArticlesResponse response ->
+        FetchFeedResponse response ->
             ( { model | articles = response }, Cmd.none )
 
         FetchTagsResponse response ->

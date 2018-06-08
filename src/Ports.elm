@@ -1,6 +1,6 @@
 port module Ports exposing (storeSession, onSessionChange)
 
-import Model exposing (Session)
+import Data.Session exposing (Session)
 
 
 port storeSession : Session -> Cmd msg

@@ -1,8 +1,8 @@
 module Routing exposing (Route(..), parseLocation)
 
-import Model exposing (Slug)
 import Navigation exposing (Location)
 import UrlParser exposing (Parser, parseHash, string, oneOf, top, map, s, (</>))
+import Data.Article exposing (Slug)
 
 
 type Route

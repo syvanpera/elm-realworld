@@ -2,9 +2,9 @@ module Main exposing (main)
 
 import Html exposing (Html, div)
 import Navigation exposing (Location)
-import Model exposing (Session)
 import Routing exposing (Route(..), parseLocation)
 import Ports
+import Data.Session exposing (Session)
 import Page.Home as Home
 import Page.Article as Article
 import Page.Profile as Profile

@@ -2,7 +2,7 @@ module Util exposing (formatDate, validSession)
 
 import Date exposing (Date)
 import Date.Format
-import Model exposing (Session)
+import Data.Session exposing (Session)
 
 
 formatDate : Date -> String

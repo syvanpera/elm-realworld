@@ -2,7 +2,7 @@ module Views.Profile exposing (viewFollowButton)
 
 import Html exposing (Html, text, button, i)
 import Html.Attributes exposing (class)
-import Model exposing (Profile)
+import Data.Profile exposing (Profile)
 
 
 viewFollowButton : Profile -> Html msg

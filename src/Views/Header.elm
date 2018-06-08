@@ -2,7 +2,7 @@ module Views.Header exposing (view)
 
 import Html exposing (Html, nav, div, a, ul, li, i, text)
 import Html.Attributes exposing (class, href)
-import Model exposing (Session)
+import Data.Session exposing (Session)
 import Debug
 
 

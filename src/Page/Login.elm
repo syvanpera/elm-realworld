@@ -4,8 +4,9 @@ import Html exposing (Html, div, h1, p, form, fieldset, input, button, text, a, 
 import Html.Attributes exposing (class, placeholder, type_, href, value, hidden)
 import Html.Events exposing (onInput, onSubmit)
 import Http
-import Model exposing (User, Session)
-import Api exposing (loginUser)
+import Api.User exposing (loginUser)
+import Data.User exposing (User)
+import Data.Session exposing (Session)
 import Ports exposing (storeSession)
 import Debug
 

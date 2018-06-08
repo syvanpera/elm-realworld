@@ -4,9 +4,10 @@ import Html exposing (Html, div, text, a, button, hr, p, span, img, form, textar
 import Html.Attributes exposing (class, href, src, placeholder, attribute, hidden)
 import RemoteData exposing (WebData)
 import Markdown
-import Model exposing (Article, Comments, Comment, Slug, Session)
+import Api.Article exposing (fetchArticle, fetchComments)
+import Data.Article exposing (Article, Comments, Comment, Slug)
+import Data.Session exposing (Session)
 import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
-import Api exposing (fetchArticle, fetchComments)
 import Util exposing (formatDate)
 import Views.Banner as Banner
 

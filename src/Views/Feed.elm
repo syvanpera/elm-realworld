@@ -3,11 +3,12 @@ module Views.Feed exposing (viewFeed)
 import Html exposing (Html, div, text, a, ul, li, span, h1, p)
 import Html.Attributes exposing (class, href)
 import RemoteData exposing (WebData)
-import Model exposing (Articles, Article)
+import Data.Article exposing (Article)
+import Data.Feed exposing (Feed)
 import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
 
 
-viewFeed : WebData Articles -> Html msg
+viewFeed : WebData Feed -> Html msg
 viewFeed articlesData =
     case articlesData of
         RemoteData.NotAsked ->

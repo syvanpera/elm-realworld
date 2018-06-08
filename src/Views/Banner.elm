@@ -2,9 +2,8 @@ module Views.Banner exposing (view)
 
 import Html exposing (Html, div, text, h1, p)
 import Html.Attributes exposing (class)
-import Model exposing (Article, Session)
+import Data.Article exposing (Article)
 import Views.Article as ArticleView exposing (ViewType(..), viewArticleMeta)
-import Util exposing (validSession)
 
 
 viewArticle : Article -> Html msg
