@@ -153,7 +153,7 @@ update msg model =
                 in
                     ( { model | session = Just session }, Cmd.none )
 
-            ( _, _ ) ->
+            _ ->
                 ( model, Cmd.none )
 
 

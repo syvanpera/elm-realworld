@@ -84,7 +84,7 @@ tagList tagsData =
                 |> List.map
                     (\tag ->
                         a
-                            [ href "javascript:void(0)"
+                            [ href "javascript:void(0);"
                             , class "tag-pill tag-default"
                             , onClick (ActiveFeed (Tagged tag))
                             ]
@@ -109,36 +109,22 @@ viewFeeds session { activeFeed } =
         ul [ class "nav nav-pills outline-active" ]
             [ li [ class "nav-item", hidden (not <| validSession session) ]
                 [ a
-                    [ href "javascript:void(0)"
-                    , class
-                        ("nav-link"
-                            ++ (if activeFeed == Personal then
-                                    " active"
-                                else
-                                    ""
-                               )
-                        )
+                    [ href "javascript:void(0);"
+                    , classList [ ( "nav-link", True ), ( "active", activeFeed == Personal ) ]
                     , onClick (ActiveFeed Personal)
                     ]
                     [ text "Your Feed" ]
                 ]
             , li [ class "nav-item" ]
                 [ a
-                    [ href "javascript:void(0)"
-                    , class
-                        ("nav-link"
-                            ++ (if activeFeed == Global then
-                                    " active"
-                                else
-                                    ""
-                               )
-                        )
+                    [ href "javascript:void(0);"
+                    , classList [ ( "nav-link", True ), ( "active", activeFeed == Global ) ]
                     , onClick (ActiveFeed Global)
                     ]
                     [ text "Global Feed" ]
                 ]
             , li [ class "nav-item", hidden (activeFeed == Global || activeFeed == Personal) ]
-                [ a [ href "javascript:void(0)", class "nav-link active" ]
+                [ a [ href "javascript:void(0);", class "nav-link active" ]
                     [ i [ class "ion-pound" ] []
                     , text (" " ++ activeFeedTag)
                     ]

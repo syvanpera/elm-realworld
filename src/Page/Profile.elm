@@ -1,7 +1,7 @@
 module Page.Profile exposing (Model, Msg, init, view, update)
 
 import Html exposing (Html, div, text, p, img, h4, button, ul, li, a, i)
-import Html.Attributes exposing (class, src, href)
+import Html.Attributes exposing (class, classList, src, href)
 import Html.Events exposing (onClick)
 import RemoteData exposing (WebData)
 import Model exposing (Profile, Articles, Session)
@@ -76,30 +76,22 @@ view model =
                         [ ul [ class "nav nav-pills outline-active" ]
                             [ li [ class "nav-item" ]
                                 [ a
-                                    [ class
-                                        ("nav-link"
-                                            ++ (if model.activeFeed == Personal then
-                                                    " active"
-                                                else
-                                                    ""
-                                               )
-                                        )
-                                    , href "javascript:void(0)"
+                                    [ classList
+                                        [ ( "nav-link", True )
+                                        , ( "active", model.activeFeed == Personal )
+                                        ]
+                                    , href "javascript:void(0);"
                                     , onClick (ActiveFeed Personal)
                                     ]
                                     [ text "My Articles" ]
                                 ]
                             , li [ class "nav-item" ]
                                 [ a
-                                    [ class
-                                        ("nav-link"
-                                            ++ (if model.activeFeed == Favorite then
-                                                    " active"
-                                                else
-                                                    ""
-                                               )
-                                        )
-                                    , href "javascript:void(0)"
+                                    [ classList
+                                        [ ( "nav-link", True )
+                                        , ( "active", model.activeFeed == Favorite )
+                                        ]
+                                    , href "javascript:void(0);"
                                     , onClick (ActiveFeed Favorite)
                                     ]
                                     [ text "Favorited Articles" ]
@@ -136,5 +128,5 @@ update _ msg model =
         ( FetchArticlesResponse response, _ ) ->
             ( { model | articles = response }, Cmd.none )
 
-        ( _, _ ) ->
+        _ ->
             ( model, Cmd.none )
