@@ -9,7 +9,7 @@ import Api.Profile exposing (fetchProfile)
 import Data.Feed exposing (Feed)
 import Data.Profile exposing (Profile)
 import Data.Session exposing (Session)
-import Views.Feed exposing (viewFeed)
+import Views.Feed as Feed exposing (view)
 import Views.Profile exposing (viewFollowButton)
 
 
@@ -41,7 +41,7 @@ init username session =
     ( { initialModel | profile = RemoteData.Loading, articles = RemoteData.Loading }
     , Cmd.batch
         [ fetchProfile username session |> Cmd.map FetchProfileResponse
-        , fetchUserFeed 0 5 username |> Cmd.map FetchFeedResponse
+        , fetchUserFeed 0 5 username session |> Cmd.map FetchFeedResponse
         ]
     )
 
@@ -101,7 +101,7 @@ view model =
                                 ]
                             ]
                         ]
-                    , viewFeed model.articles
+                    , Feed.view 1 1 model.articles
                     ]
                 ]
             ]
@@ -109,7 +109,7 @@ view model =
 
 
 update : Maybe Session -> Msg -> Model -> ( Model, Cmd Msg )
-update _ msg model =
+update session msg model =
     case ( msg, model.profile ) of
         ( ActiveFeed feed, RemoteData.Success profile ) ->
             let
@@ -120,10 +120,10 @@ update _ msg model =
             in
                 case feed of
                     Personal ->
-                        updateFeed (fetchUserFeed 0 5 profile.username)
+                        updateFeed (fetchUserFeed 0 5 profile.username session)
 
                     Favorite ->
-                        updateFeed (fetchFavoriteFeed 0 5 profile.username)
+                        updateFeed (fetchFavoriteFeed 0 5 profile.username session)
 
         ( FetchProfileResponse response, _ ) ->
             ( { model | profile = response }, Cmd.none )

@@ -10,7 +10,7 @@ import Api.Feed exposing (fetchFeed, fetchPrivateFeed, fetchFavoriteFeed)
 import Data.Article exposing (Tags, Tag)
 import Data.Feed exposing (Feed)
 import Data.Session exposing (Session)
-import Views.Feed exposing (viewFeed)
+import Views.Feed as Feed
 import Views.Banner as Banner
 
 
@@ -42,10 +42,10 @@ initialModel =
 
 
 init : Maybe Session -> ( Model, Cmd Msg )
-init _ =
+init session =
     ( { initialModel | articles = RemoteData.Loading, tags = RemoteData.Loading }
     , Cmd.batch
-        [ fetchFeed 0 (articlesPerPage initialModel.activeFeed) Nothing
+        [ fetchFeed 0 (articlesPerPage initialModel.activeFeed) Nothing session
             |> Cmd.map FetchFeedResponse
         , fetchTags
             |> Cmd.map FetchTagsResponse
@@ -97,8 +97,8 @@ tagList tagsData =
             [ text "" ]
 
 
-viewFeeds : Maybe Session -> Model -> Html Msg
-viewFeeds session { activeFeed } =
+availableFeeds : Maybe Session -> Model -> Html Msg
+availableFeeds session { activeFeed } =
     let
         activeFeedTag =
             case activeFeed of
@@ -134,27 +134,6 @@ viewFeeds session { activeFeed } =
             ]
 
 
-pagination : FeedSource -> Int -> WebData Feed -> Html msg
-pagination activeFeed currentPage articles =
-    case articles of
-        RemoteData.Success articles ->
-            let
-                pages =
-                    articles.articlesCount // articlesPerPage activeFeed
-
-                pageLink page isActive =
-                    li [ classList [ ( "page-item", True ), ( "active", isActive ) ] ]
-                        [ a [ class "page-link", href "" ] [ text (toString page) ]
-                        ]
-            in
-                List.range 1 pages
-                    |> List.map (\page -> pageLink page (page == currentPage))
-                    |> ul [ class "pagination" ]
-
-        _ ->
-            text ""
-
-
 view : Maybe Session -> Model -> Html Msg
 view session model =
     let
@@ -170,9 +149,8 @@ view session model =
                 [ class "container page" ]
                 [ div [ class "row" ]
                     [ div [ class "col-md-9" ]
-                        [ div [ class "feed-toggle" ] [ viewFeeds session model ]
-                        , viewFeed model.articles
-                        , pagination model.activeFeed model.currentPage model.articles
+                        [ div [ class "feed-toggle" ] [ availableFeeds session model ]
+                        , Feed.view model.currentPage (articlesPerPage model.activeFeed) model.articles
                         ]
                     , div [ class "col-md-3" ]
                         [ div [ class "sidebar", hidden (model.tags == RemoteData.NotAsked) ]
@@ -204,13 +182,13 @@ update session msg model =
                         updateFeed (fetchPrivateFeed 0 articleLimit session)
 
                     Global ->
-                        updateFeed (fetchFeed 0 articleLimit Nothing)
+                        updateFeed (fetchFeed 0 articleLimit Nothing session)
 
                     Tagged tag ->
-                        updateFeed (fetchFeed 0 articleLimit (Just tag))
+                        updateFeed (fetchFeed 0 articleLimit (Just tag) session)
 
                     Favorite username ->
-                        updateFeed (fetchFavoriteFeed 0 articleLimit username)
+                        updateFeed (fetchFavoriteFeed 0 articleLimit username session)
 
                     Author username ->
                         updateFeed (fetchPrivateFeed 0 articleLimit session)

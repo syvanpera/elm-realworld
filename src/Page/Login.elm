@@ -51,11 +51,23 @@ view model =
                         |> ul [ class "error-messages", hidden (List.isEmpty model.errors) ]
                     , form [ onSubmit Login ]
                         [ fieldset [ class "form-group" ]
-                            [ input [ class "form-control form-control-lg", placeholder "Email", type_ "text", value model.email, onInput EmailInput ]
+                            [ input
+                                [ class "form-control form-control-lg"
+                                , placeholder "Email"
+                                , type_ "text"
+                                , value model.email
+                                , onInput EmailInput
+                                ]
                                 []
                             ]
                         , fieldset [ class "form-group" ]
-                            [ input [ class "form-control form-control-lg", placeholder "Password", type_ "password", value model.password, onInput PasswordInput ]
+                            [ input
+                                [ class "form-control form-control-lg"
+                                , placeholder "Password"
+                                , type_ "password"
+                                , value model.password
+                                , onInput PasswordInput
+                                ]
                                 []
                             ]
                         , button [ class "btn btn-lg btn-primary pull-xs-right" ]

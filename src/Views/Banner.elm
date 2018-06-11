@@ -10,7 +10,7 @@ viewArticle : Article -> Html msg
 viewArticle article =
     div [ class "container" ]
         [ h1 [] [ text article.title ]
-        , viewArticleMeta ArticleView.Default article
+        , viewArticleMeta ArticleView.Details article
         ]
 
 

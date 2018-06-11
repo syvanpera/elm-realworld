@@ -38,26 +38,29 @@ fetchPrivateFeedUrl offset limit =
     baseApiUrl ++ "articles/feed?limit=" ++ toString limit ++ "&offset=" ++ toString offset
 
 
-fetchFeed : Int -> Int -> Maybe Tag -> Cmd (WebData Feed)
-fetchFeed offset limit tag =
+fetchFeed : Int -> Int -> Maybe Tag -> Maybe Session -> Cmd (WebData Feed)
+fetchFeed offset limit tag session =
     HttpBuilder.get (fetchFeedUrl offset limit tag)
         |> withExpect (Http.expectJson feedDecoder)
+        |> withAuthorization session
         |> toRequest
         |> RemoteData.sendRequest
 
 
-fetchUserFeed : Int -> Int -> String -> Cmd (WebData Feed)
-fetchUserFeed offset limit username =
+fetchUserFeed : Int -> Int -> String -> Maybe Session -> Cmd (WebData Feed)
+fetchUserFeed offset limit username session =
     HttpBuilder.get (fetchUserFeedUrl offset limit username)
         |> withExpect (Http.expectJson feedDecoder)
+        |> withAuthorization session
         |> toRequest
         |> RemoteData.sendRequest
 
 
-fetchFavoriteFeed : Int -> Int -> String -> Cmd (WebData Feed)
-fetchFavoriteFeed offset limit username =
+fetchFavoriteFeed : Int -> Int -> String -> Maybe Session -> Cmd (WebData Feed)
+fetchFavoriteFeed offset limit username session =
     HttpBuilder.get (fetchFavoriteFeedUrl offset limit username)
         |> withExpect (Http.expectJson feedDecoder)
+        |> withAuthorization session
         |> toRequest
         |> RemoteData.sendRequest
 

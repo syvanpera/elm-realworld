@@ -16,6 +16,7 @@ type alias Article =
     , updatedAt : Date
     , tagList : List Tag
     , author : Profile
+    , favorited : Bool
     , favoritesCount : Int
     }
 
@@ -65,6 +66,7 @@ articleDecoder =
         |> required "updatedAt" Json.Decode.Extra.date
         |> required "tagList" (Decode.list Decode.string)
         |> required "author" profileDecoder
+        |> required "favorited" Decode.bool
         |> required "favoritesCount" Decode.int
 
 
